@@ -330,6 +330,29 @@
         .png-export-menu button { width:100%; display:flex; align-items:center; gap:9px; padding:10px 12px; text-align:left; font-size:11px; font-weight:800; color:#334155; background:#fff; }
         .png-export-menu button:hover { background:#f8fafc; color:#1d4ed8; }
         .png-export-menu .menu-caption { padding:9px 12px 7px; font-size:10px; font-weight:700; color:#94a3b8; background:#f8fafc; border-bottom:1px solid #e2e8f0; }
+        /* PNG preview / export rendering */
+        .png-preview-modal { position:fixed; inset:0; z-index:160; background:rgba(15,23,42,.72); backdrop-filter:blur(5px); display:flex; align-items:center; justify-content:center; padding:18px; }
+        .png-preview-card { width:min(1500px,98vw); height:min(94vh,1100px); background:#fff; border-radius:18px; box-shadow:0 24px 70px rgba(15,23,42,.30); overflow:hidden; display:flex; flex-direction:column; }
+        .png-preview-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-bottom:1px solid #e2e8f0; background:#f8fafc; }
+        .png-preview-meta { font-size:10px; color:#64748b; margin-top:2px; }
+        .png-preview-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+        .png-preview-btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; border-radius:9px; padding:8px 12px; font-size:11px; font-weight:800; border:1px solid #cbd5e1; background:#fff; color:#334155; transition:.15s ease; }
+        .png-preview-btn:hover { background:#f1f5f9; border-color:#94a3b8; }
+        .png-preview-btn.primary { background:#2563eb; border-color:#2563eb; color:#fff; }
+        .png-preview-btn.primary:hover { background:#1d4ed8; border-color:#1d4ed8; }
+        .png-preview-btn.copy { background:#0f172a; border-color:#0f172a; color:#fff; }
+        .png-preview-btn.copy:hover { background:#1e293b; }
+        .png-preview-body { flex:1; min-height:0; overflow:auto; padding:18px; background:#e2e8f0; display:flex; align-items:flex-start; justify-content:center; }
+        .png-preview-body img { display:block; width:auto; max-width:100%; height:auto; box-shadow:0 12px 32px rgba(15,23,42,.16); background:#fff; }
+        /* Native form controls (especially <select multiple>) can render differently in html2canvas.
+           The export clone replaces them with deterministic blocks using these styles. */
+        .png-export-static-control { box-sizing:border-box; width:100%; color:#0f172a; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; font-size:11px; line-height:1.35; }
+        .png-export-static-select { min-height:104px; max-height:104px; overflow:hidden; padding:6px; }
+        .png-export-static-select.single { min-height:38px; max-height:38px; display:flex; align-items:center; padding:8px 10px; }
+        .png-export-static-option { display:block; padding:4px 7px; border-radius:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .png-export-static-option + .png-export-static-option { margin-top:2px; }
+        .png-export-static-option.selected { background:#dbeafe; color:#1e3a8a; font-weight:800; }
+        .png-export-static-input { min-height:38px; display:flex; align-items:center; padding:8px 10px; white-space:pre-wrap; overflow-wrap:anywhere; word-break:break-word; }
 
     </style>
 </head>
@@ -1384,7 +1407,7 @@
                 <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm sales-option-kpi">
                     <div class="text-xs font-semibold text-slate-400">총 판매량</div>
                     <div id="salesKpiQty" class="text-2xl font-extrabold text-slate-900 mt-2">0</div>
-                    <div class="text-[11px] text-emerald-600 font-semibold mt-1">판매량 기준</div>
+                    <div class="text-[11px] text-emerald-600 font-semibold mt-1">입수량 반영 낱개 기준</div>
                 </div>
                 <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm sales-option-kpi">
                     <div class="text-xs font-semibold text-slate-400">총 누적 매출액</div>
@@ -1392,17 +1415,17 @@
                     <div class="text-[11px] text-slate-500 mt-1">매출(원) 기준</div>
                 </div>
                 <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm sales-option-kpi">
-                    <div class="text-xs font-semibold text-slate-400">건당 평균 판매 단가</div>
+                    <div class="text-xs font-semibold text-slate-400">낱개 평균 판매 단가</div>
                     <div id="salesKpiAov" class="text-2xl font-extrabold text-blue-600 mt-2">₩0</div>
                     <div class="text-[11px] text-slate-500 mt-1">매출 ÷ 판매량</div>
                 </div>
                 <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm sales-option-kpi">
-                    <div class="text-xs font-semibold text-slate-400">최다 판매 옵션</div>
+                    <div class="text-xs font-semibold text-slate-400">최다 판매 그룹</div>
                     <div id="salesKpiTopQty" class="text-lg font-extrabold text-slate-900 mt-2 truncate" title="-">-</div>
                     <div id="salesKpiTopQtySub" class="text-[11px] text-amber-600 font-semibold mt-1">0개</div>
                 </div>
                 <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm sales-option-kpi col-span-2 lg:col-span-1">
-                    <div class="text-xs font-semibold text-slate-400">최다 매출 옵션</div>
+                    <div class="text-xs font-semibold text-slate-400">최다 매출 그룹</div>
                     <div id="salesKpiTopRev" class="text-lg font-extrabold text-slate-900 mt-2 truncate" title="-">-</div>
                     <div id="salesKpiTopRevSub" class="text-[11px] text-emerald-600 font-semibold mt-1">₩0</div>
                 </div>
@@ -1423,10 +1446,10 @@
             <section class="grid grid-cols-1 lg:grid-cols-12 gap-5">
                 <div class="lg:col-span-5 bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col sales-option-chart-card">
                     <div class="flex items-center justify-between gap-3">
-                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="fa-solid fa-chart-pie text-orange-500"></i> SKU 용량별 (100g vs 30g) 점유율</h3>
-                        <span class="text-[10px] text-slate-400 font-medium">판매량 vs 매출</span>
+                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="fa-solid fa-chart-pie text-orange-500"></i> 용량별 점유율</h3>
+                        <span class="text-[10px] text-slate-400 font-medium">낱개 판매량 vs 매출</span>
                     </div>
-                    <p class="text-[11px] text-slate-500 mt-1">원본 데이터의 옵션명/옵션 규격에서 내용량을 추출하여 30g·100g 기준으로 합산합니다.</p>
+                    <p class="text-[11px] text-slate-500 mt-1">업로드한 Raw Data에서 실제 용량을 자동 추출해 용량군으로 묶습니다. 같은 용량 안에 맛 정보가 있으면 맛별 그룹으로도 분리하며, 새로운 제품·용량·맛 조합이 들어와도 자동 적용됩니다. 판매량은 입수량을 반영한 낱개 기준입니다.</p>
                     <div class="grid grid-cols-2 gap-3 mt-3 flex-1">
                         <div class="relative h-56"><canvas id="salesChartVolumeShare"></canvas></div>
                         <div class="relative h-56"><canvas id="salesChartRevenueShare"></canvas></div>
@@ -1436,10 +1459,10 @@
 
                 <div class="lg:col-span-7 bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col sales-option-chart-card">
                     <div class="flex items-center justify-between gap-3">
-                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="fa-solid fa-chart-column text-blue-600"></i> 옵션별 판매 수량 및 매출 분석</h3>
-                        <span id="salesComboChartNote" class="text-[10px] bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded">전체 옵션</span>
+                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="fa-solid fa-chart-column text-blue-600"></i> 용량·맛별 판매 수량 및 매출 분석</h3>
+                        <span id="salesComboChartNote" class="text-[10px] bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded">전체 용량·맛 그룹 · 낱개 판매량</span>
                     </div>
-                    <p class="text-[11px] text-slate-500 mt-1">막대 = 판매량, 꺾은선 = 매출액(만원). 동일 옵션 ID가 여러 행으로 존재하면 합산합니다.</p>
+                    <p class="text-[11px] text-slate-500 mt-1">막대 = 낱개 판매량, 꺾은선 = 매출액(만원). 판매량은 옵션 입수량(1/2/3개입)을 곱해 낱개 기준으로 환산합니다.</p>
                     <div class="h-[300px] mt-3"><canvas id="salesChartOptionCombo"></canvas></div>
                 </div>
             </section>
@@ -1450,7 +1473,7 @@
                         <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="fa-solid fa-boxes-stacked text-purple-600"></i> 구매 단위별 (1개입 / 2개입 / 3개입) 점유 현황</h3>
                         <span class="text-[10px] text-slate-400 font-medium">번들링 구조</span>
                     </div>
-                    <p class="text-[11px] text-slate-500 mt-1">옵션명에서 구매 단위를 추출해 1·2·3개입으로 분류합니다.</p>
+                    <p class="text-[11px] text-slate-500 mt-1">원본 SKU의 옵션명에서 구매 단위를 추출하고, 용량·맛으로 그룹화한 뒤 번들별 판매량은 원본 입수량을 기준으로 집계합니다.</p>
                     <div class="h-64 mt-3"><canvas id="salesChartBundle"></canvas></div>
                     <div id="salesBundleSummary" class="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-100"></div>
                 </div>
@@ -1460,7 +1483,7 @@
                         <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="fa-solid fa-scale-balanced text-emerald-600"></i> 옵션별 세트 단가 & 10g당 실질 가격 비교</h3>
                         <span class="text-[10px] text-emerald-700 bg-emerald-50 font-bold px-2 py-0.5 rounded">가격 효율성</span>
                     </div>
-                    <p class="text-[11px] text-slate-500 mt-1">세트 평균 판매가(매출 ÷ 판매량)를 포장 중량으로 환산하여 10g당 가격을 계산합니다.</p>
+                    <p class="text-[11px] text-slate-500 mt-1">세트 평균 판매가(매출 ÷ 세트 판매수)는 그대로 보여주고, 10g당 가격은 입수량을 반영한 낱개 판매량 기준으로 계산합니다.</p>
                     <div class="h-64 mt-3"><canvas id="salesChartUnitEconomics"></canvas></div>
                 </div>
             </section>
@@ -1469,24 +1492,30 @@
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pb-4 border-b border-slate-100">
                     <div>
                         <h3 class="font-bold text-slate-800 text-base flex items-center gap-2"><i class="fa-solid fa-table text-blue-600"></i> 판매 옵션별 종합 데이터</h3>
-                        <p class="text-[11px] text-slate-500 mt-1">첨부 리포트의 판매 옵션 분석 표를 동적 Raw Data 기준으로 다시 계산합니다.</p>
+                        <p class="text-[11px] text-slate-500 mt-1">첨부 리포트의 Raw Data를 제품군 × 용량 × 맛 기준으로 집계합니다. 그룹 보기에서는 입수량만 다른 SKU를 합산하고, SKU별 보기에서는 각 옵션 ID를 별도 행으로 표시합니다. 용량·맛 필터는 복수 선택할 수 있습니다.</p>
                     </div>
-                    <div class="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
-                        <button onclick="filterSalesOptionTable('all')" class="sales-option-filter-btn active px-3 py-1.5 text-xs font-semibold rounded-lg bg-white shadow-sm text-slate-800" data-filter="all">전체</button>
-                        <button onclick="filterSalesOptionTable('100g')" class="sales-option-filter-btn px-3 py-1.5 text-xs font-medium rounded-lg text-slate-600" data-filter="100g">100g</button>
-                        <button onclick="filterSalesOptionTable('30g')" class="sales-option-filter-btn px-3 py-1.5 text-xs font-medium rounded-lg text-slate-600" data-filter="30g">30g</button>
-                        <button onclick="filterSalesOptionTable('bundle')" class="sales-option-filter-btn px-3 py-1.5 text-xs font-medium rounded-lg text-slate-600" data-filter="bundle">묶음세트만</button>
+                    <div class="flex flex-wrap items-center gap-2 bg-slate-100 p-2 rounded-xl">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[10px] font-bold text-slate-500 px-1">표시</span>
+                            <button id="salesViewGroupBtn" type="button" onclick="setSalesOptionViewMode('group')" class="sales-option-view-btn active px-2.5 py-1.5 text-[11px] font-semibold rounded-lg bg-white shadow-sm text-slate-800">용량·맛 그룹</button>
+                            <button id="salesViewSkuBtn" type="button" onclick="setSalesOptionViewMode('sku')" class="sales-option-view-btn px-2.5 py-1.5 text-[11px] font-semibold rounded-lg text-slate-600">SKU별</button>
+                        </div>
+                        <div class="h-5 w-px bg-slate-300"></div>
+                        <div id="salesOptionCapacityFilters" class="flex flex-wrap items-center gap-1.5"></div>
+                        <div class="h-5 w-px bg-slate-300 hidden sm:block"></div>
+                        <div id="salesOptionFlavorFilters" class="flex flex-wrap items-center gap-1.5"></div>
+                        <button type="button" onclick="clearSalesOptionFilters()" class="px-2.5 py-1.5 text-[11px] font-semibold rounded-lg text-slate-500 hover:bg-white hover:text-slate-800">필터 초기화</button>
                     </div>
                 </div>
                 <div class="overflow-x-auto custom-scrollbar mt-3">
                     <table class="w-full text-xs text-left sales-option-table">
                         <thead class="bg-slate-50 text-slate-700 font-bold sticky top-0"><tr>
-                            <th class="py-3 px-3">옵션 규격명</th>
+                            <th id="salesOptionPrimaryHeader" class="py-3 px-3">용량 · 맛 그룹 / SKU</th>
                             <th class="py-3 px-3">식별자 (등록 / 옵션 ID)</th>
                             <th class="py-3 px-3 text-right">주문</th>
-                            <th class="py-3 px-3 text-right">판매량</th>
+                            <th class="py-3 px-3 text-right">낱개 판매량</th>
                             <th class="py-3 px-3 text-right">판매량 점유율</th>
-                            <th class="py-3 px-3 text-right">평균 판매가</th>
+                            <th class="py-3 px-3 text-right">평균 판매가(세트)</th>
                             <th class="py-3 px-3 text-right">매출액</th>
                             <th class="py-3 px-3 text-right">매출 점유율</th>
                             <th class="py-3 px-3 text-right">10g당 환산가</th>
@@ -1569,6 +1598,28 @@
                         </div>
                     </div>
 
+                </div>
+            </div>
+        </div>
+
+        <!-- PNG Image Preview Modal -->
+        <div id="pngPreviewModal" class="png-preview-modal hidden" aria-hidden="true">
+            <div class="png-preview-card">
+                <div class="png-preview-header">
+                    <div class="min-w-0">
+                        <h2 class="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-image text-blue-600"></i> 이미지 미리보기
+                        </h2>
+                        <div id="pngPreviewMeta" class="png-preview-meta truncate">PNG 미리보기</div>
+                    </div>
+                    <div class="png-preview-actions shrink-0">
+                        <button type="button" class="png-preview-btn copy" onclick="copyPngPreviewToClipboard()"><i class="fa-regular fa-copy"></i> 이미지 복사</button>
+                        <button type="button" class="png-preview-btn primary" onclick="savePngPreviewImage()"><i class="fa-solid fa-download"></i> 이미지로 저장</button>
+                        <button type="button" class="png-preview-btn" onclick="closePngPreview()" title="닫기" aria-label="닫기"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+                <div id="pngPreviewBody" class="png-preview-body">
+                    <img id="pngPreviewImage" alt="PNG 이미지 미리보기">
                 </div>
             </div>
         </div>
@@ -2014,6 +2065,172 @@
             return `${base}.png`;
         }
 
+        let pngPreviewState = { blob: null, objectUrl: '', fileName: '', canvas: null };
+
+        function stabilizePngExportClone(clonedDoc, tabId) {
+            const clonedMain = clonedDoc.querySelector('main.dashboard-main-column, main');
+            if (!clonedMain) return;
+
+            // Keep the clone at the same layout width as the visible dashboard.
+            // Using main.scrollWidth as windowWidth made wide tables affect responsive breakpoints and
+            // caused the global filter/product field (and nearby text) to reflow or look distorted.
+            const sourceMain = document.querySelector('main.dashboard-main-column, main');
+            const visibleWidth = Math.ceil(sourceMain?.getBoundingClientRect().width || sourceMain?.clientWidth || document.documentElement.clientWidth || window.innerWidth);
+            clonedMain.style.width = `${visibleWidth}px`;
+            clonedMain.style.maxWidth = `${visibleWidth}px`;
+            clonedMain.style.minWidth = '0';
+            clonedMain.style.margin = '0';
+            clonedMain.style.boxSizing = 'border-box';
+
+            clonedMain.querySelectorAll('*').forEach(el => {
+                el.style.animation = 'none';
+                el.style.transition = 'none';
+            });
+
+            // Native <select> rendering is browser/platform dependent in html2canvas.
+            // Replace select controls with deterministic HTML blocks so Korean product names do not warp.
+            clonedMain.querySelectorAll('select').forEach(select => {
+                const wrap = clonedDoc.createElement('div');
+                wrap.className = 'png-export-static-control png-export-static-select' + (select.multiple ? '' : ' single');
+                if (!select.multiple) {
+                    const selected = select.selectedOptions?.[0]?.textContent || select.options?.[select.selectedIndex]?.textContent || '';
+                    wrap.textContent = selected;
+                } else {
+                    Array.from(select.options).forEach(option => {
+                        const item = clonedDoc.createElement('div');
+                        item.className = 'png-export-static-option' + (option.selected ? ' selected' : '');
+                        item.textContent = option.textContent || option.value || '';
+                        wrap.appendChild(item);
+                    });
+                }
+                const rect = select.getBoundingClientRect();
+                if (rect.height) wrap.style.height = `${Math.round(rect.height)}px`;
+                if (rect.width) wrap.style.width = `${Math.round(rect.width)}px`;
+                select.replaceWith(wrap);
+            });
+
+            // Freeze text inputs/textarea to their visible value instead of relying on native control painting.
+            clonedMain.querySelectorAll('input[type="text"], input[type="search"], textarea').forEach(input => {
+                const wrap = clonedDoc.createElement('div');
+                wrap.className = 'png-export-static-control png-export-static-input';
+                wrap.textContent = input.value || input.getAttribute('placeholder') || '';
+                if (input.value) wrap.style.color = '#0f172a';
+                else wrap.style.color = '#94a3b8';
+                const rect = input.getBoundingClientRect();
+                if (rect.height) wrap.style.height = `${Math.round(rect.height)}px`;
+                if (rect.width) wrap.style.width = `${Math.round(rect.width)}px`;
+                input.replaceWith(wrap);
+            });
+
+            // Long labels should wrap naturally instead of being squeezed by flex/grid cloning.
+            clonedMain.querySelectorAll('[class*="truncate"]').forEach(el => {
+                el.style.overflow = 'hidden';
+                el.style.textOverflow = 'ellipsis';
+                el.style.whiteSpace = 'nowrap';
+                el.style.minWidth = '0';
+            });
+
+            // Hide export UI and transient overlays from the captured image.
+            clonedDoc.querySelector('#pngExportControl')?.classList.add('hidden');
+            clonedDoc.querySelector('#pngPreviewModal')?.classList.add('hidden');
+            clonedDoc.querySelector('#expandModal')?.classList.add('hidden');
+            clonedDoc.querySelectorAll('.tooltip, [role="tooltip"]').forEach(el => el.style.display = 'none');
+
+            // Keep only the requested tab in the capture DOM.
+            clonedDoc.querySelectorAll('.tab-content').forEach(el => {
+                if (el.id === tabId) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+        }
+
+        async function canvasToPngBlob(canvas) {
+            return new Promise((resolve, reject) => {
+                canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('PNG 데이터 생성에 실패했습니다.')), 'image/png', 1.0);
+            });
+        }
+
+        async function showPngPreview(canvas, fileName, title) {
+            const blob = await canvasToPngBlob(canvas);
+            const objectUrl = URL.createObjectURL(blob);
+            if (pngPreviewState.objectUrl) URL.revokeObjectURL(pngPreviewState.objectUrl);
+            pngPreviewState = { blob, objectUrl, fileName, canvas };
+
+            const modal = document.getElementById('pngPreviewModal');
+            const img = document.getElementById('pngPreviewImage');
+            const meta = document.getElementById('pngPreviewMeta');
+            if (!modal || !img) throw new Error('PNG 미리보기 창을 찾을 수 없습니다.');
+
+            img.src = objectUrl;
+            img.alt = `${title || 'PNG'} 미리보기`;
+            if (meta) {
+                const mb = (blob.size / (1024 * 1024)).toFixed(1);
+                meta.textContent = `${title || 'PNG'} · ${canvas.width.toLocaleString()} × ${canvas.height.toLocaleString()} px · ${mb} MB`;
+            }
+            modal.classList.remove('hidden');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closePngPreview() {
+            const modal = document.getElementById('pngPreviewModal');
+            const img = document.getElementById('pngPreviewImage');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.setAttribute('aria-hidden', 'true');
+            }
+            if (img) img.removeAttribute('src');
+            document.body.classList.remove('overflow-hidden');
+            if (pngPreviewState.objectUrl) URL.revokeObjectURL(pngPreviewState.objectUrl);
+            pngPreviewState = { blob: null, objectUrl: '', fileName: '', canvas: null };
+        }
+
+        async function savePngPreviewImage() {
+            const { blob, fileName } = pngPreviewState;
+            if (!blob || !fileName) {
+                showToast('이미지 저장 오류', '저장할 PNG 미리보기가 없습니다.', '⚠️');
+                return;
+            }
+            try {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = fileName;
+                link.href = url;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                showToast('이미지 저장 완료', `${fileName} 파일을 저장했습니다.`, '✅');
+            } catch (error) {
+                console.error('PNG save error:', error);
+                showToast('이미지 저장 오류', error?.message || 'PNG 저장 중 문제가 발생했습니다.', '⚠️');
+            }
+        }
+
+        async function copyPngPreviewToClipboard() {
+            const { blob } = pngPreviewState;
+            if (!blob) {
+                showToast('이미지 복사 오류', '복사할 PNG 미리보기가 없습니다.', '⚠️');
+                return;
+            }
+            try {
+                if (!navigator.clipboard || typeof window.ClipboardItem === 'undefined') {
+                    throw new Error('현재 브라우저에서는 이미지 클립보드 복사를 지원하지 않습니다. 미리보기에서 이미지로 저장을 이용해주세요.');
+                }
+                await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                showToast('이미지 복사 완료', 'PNG 이미지가 클립보드에 복사되었습니다.', '✅');
+            } catch (error) {
+                console.error('PNG clipboard copy error:', error);
+                showToast('이미지 복사 안내', error?.message || '클립보드 복사 권한이 필요합니다.', 'ℹ️');
+            }
+        }
+
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById('pngPreviewModal');
+                if (modal && !modal.classList.contains('hidden')) closePngPreview();
+            }
+        });
+
         async function exportDashboardTabPng(tabId) {
             closePngExportMenu();
             const main = document.querySelector('main.dashboard-main-column, main');
@@ -2040,13 +2257,12 @@
                     exportButton.disabled = true;
                     exportButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-blue-300 text-sm"></i>';
                 }
-                showToast('PNG 생성 중', `${tabId === 'tab1' ? '01 Executive Overview' : '02 지면 성과 분석'} 전체 화면을 고해상도 PNG로 변환하고 있습니다.`, '🖼️');
+                showToast('PNG 생성 중', `${tabId === 'tab1' ? '01 Executive Overview' : '02 지면 성과 분석'} 전체 화면을 미리보기용 PNG로 만들고 있습니다.`, '🖼️');
 
                 if (!modalWasHidden && modal) closeExpandModal();
                 switchTab(tabId);
                 await waitForPngRender();
 
-                // Capture only the right-side analysis area (global filter + selected tab), excluding navigation/header.
                 const canvas = await html2canvas(main, {
                     scale: Math.min(2, Math.max(1.5, window.devicePixelRatio || 1)),
                     useCORS: true,
@@ -2056,42 +2272,27 @@
                     imageTimeout: 20000,
                     scrollX: 0,
                     scrollY: -window.scrollY,
-                    windowWidth: Math.max(document.documentElement.clientWidth, main.scrollWidth),
-                    windowHeight: Math.max(document.documentElement.clientHeight, main.scrollHeight),
-                    onclone: (clonedDoc) => {
-                        const clonedMain = clonedDoc.querySelector('main.dashboard-main-column, main');
-                        if (clonedMain) {
-                            clonedMain.style.cursor = 'default';
-                            clonedMain.querySelectorAll('*').forEach(el => {
-                                el.style.animation = 'none';
-                                el.style.transition = 'none';
-                            });
-                        }
-                        // Keep only the requested tab in the capture DOM.
-                        clonedDoc.querySelectorAll('.tab-content').forEach(el => {
-                            if (el.id === tabId) el.classList.remove('hidden');
-                            else el.classList.add('hidden');
-                        });
-                        // Hide the floating PNG menu/button from any accidental capture overlap.
-                        clonedDoc.querySelector('#pngExportControl')?.classList.add('hidden');
-                    }
+                    // IMPORTANT: use the actual viewport width, not main.scrollWidth. Wide tables otherwise
+                    // change responsive layout during cloning and distort the filter/product area.
+                    windowWidth: Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0),
+                    windowHeight: Math.max(document.documentElement.clientHeight || 0, main.scrollHeight),
+                    onclone: clonedDoc => stabilizePngExportClone(clonedDoc, tabId)
                 });
 
-                const link = document.createElement('a');
-                link.download = pngExportFileName(tabId);
-                link.href = canvas.toDataURL('image/png', 1.0);
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-                showToast('PNG 추출 완료', `${tabId === 'tab1' ? '01 Executive Overview' : '02 지면 성과 분석'} 화면 전체가 PNG로 저장되었습니다.`, '✅');
-            } catch (error) {
-                console.error('PNG export error:', error);
-                showToast('PNG 추출 오류', error?.message || '이미지 변환 중 문제가 발생했습니다.', '⚠️');
-            } finally {
-                // Restore the dashboard state exactly where the user was.
+                // Restore dashboard state before opening the preview.
                 if (originalTab && document.getElementById(originalTab)) switchTab(originalTab);
                 if (sidebar && isSidebarOpen) sidebar.style.display = 'flex';
                 window.scrollTo({top: originalScrollY, behavior:'auto'});
+
+                await showPngPreview(canvas, pngExportFileName(tabId), tabId === 'tab1' ? '01 Executive Overview' : '02 지면 성과 분석');
+                showToast('PNG 미리보기 준비 완료', '내용을 확인한 뒤 이미지로 저장하거나 복사할 수 있습니다.', '👀');
+            } catch (error) {
+                console.error('PNG export error:', error);
+                showToast('PNG 추출 오류', error?.message || '이미지 변환 중 문제가 발생했습니다.', '⚠️');
+                if (originalTab && document.getElementById(originalTab)) switchTab(originalTab);
+                if (sidebar && isSidebarOpen) sidebar.style.display = 'flex';
+                window.scrollTo({top: originalScrollY, behavior:'auto'});
+            } finally {
                 if (exportButton) {
                     exportButton.disabled = false;
                     exportButton.innerHTML = originalButtonHtml;
@@ -2117,23 +2318,9 @@
                 imageTimeout: 20000,
                 scrollX: 0,
                 scrollY: -window.scrollY,
-                windowWidth: Math.max(document.documentElement.clientWidth, main.scrollWidth),
-                windowHeight: Math.max(document.documentElement.clientHeight, main.scrollHeight),
-                onclone: (clonedDoc) => {
-                    const clonedMain = clonedDoc.querySelector('main.dashboard-main-column, main');
-                    if (clonedMain) {
-                        clonedMain.style.cursor = 'default';
-                        clonedMain.querySelectorAll('*').forEach(el => {
-                            el.style.animation = 'none';
-                            el.style.transition = 'none';
-                        });
-                    }
-                    clonedDoc.querySelectorAll('.tab-content').forEach(el => {
-                        if (el.id === tabId) el.classList.remove('hidden');
-                        else el.classList.add('hidden');
-                    });
-                    clonedDoc.querySelector('#pngExportControl')?.classList.add('hidden');
-                }
+                windowWidth: Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0),
+                windowHeight: Math.max(document.documentElement.clientHeight || 0, main.scrollHeight),
+                onclone: clonedDoc => stabilizePngExportClone(clonedDoc, tabId)
             });
         }
 
@@ -2148,7 +2335,7 @@
                     exportButton.disabled = true;
                     exportButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-blue-300 text-sm"></i>';
                 }
-                showToast('PNG 생성 중', '01 Executive Overview와 02 지면 성과 분석을 한 장의 PNG로 이어 붙이고 있습니다.', '🖼️');
+                showToast('PNG 생성 중', '01 Executive Overview와 02 지면 성과 분석을 미리보기용 PNG로 이어 붙이고 있습니다.', '🖼️');
 
                 const canvas1 = await captureDashboardTabCanvas('tab1');
                 const canvas2 = await captureDashboardTabCanvas('tab2');
@@ -2164,19 +2351,18 @@
                 ctx.fillRect(0, canvas1.height, combined.width, gap);
                 ctx.drawImage(canvas2, 0, canvas1.height + gap);
 
-                const link = document.createElement('a');
-                link.download = pngExportFileName('combined').replace(/\.png$/i, '_01_02.png');
-                link.href = combined.toDataURL('image/png', 1.0);
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-                showToast('PNG 추출 완료', '01·02 목차 전체가 하나의 고해상도 PNG로 저장되었습니다.', '✅');
+                if (originalTab && document.getElementById(originalTab)) switchTab(originalTab);
+                window.scrollTo({top: originalScrollY, behavior:'auto'});
+
+                const fileName = pngExportFileName('combined').replace(/\.png$/i, '_01_02.png');
+                await showPngPreview(combined, fileName, '01 + 02 연속 PNG');
+                showToast('PNG 미리보기 준비 완료', '내용을 확인한 뒤 이미지로 저장하거나 복사할 수 있습니다.', '👀');
             } catch (error) {
                 console.error('Combined PNG export error:', error);
                 showToast('PNG 추출 오류', error?.message || '01·02 연속 이미지 생성 중 문제가 발생했습니다.', '⚠️');
-            } finally {
                 if (originalTab && document.getElementById(originalTab)) switchTab(originalTab);
                 window.scrollTo({top: originalScrollY, behavior:'auto'});
+            } finally {
                 if (exportButton) {
                     exportButton.disabled = false;
                     exportButton.innerHTML = originalButtonHtml;
@@ -4163,6 +4349,9 @@ ${getSkuLabelByKey(skuKey)}`);
 
         let salesOptionRawRows = SALES_OPTION_SAMPLE_DATA.map(r => ({...r}));
         let salesOptionFilter = 'all';
+        let salesOptionCapacityFilters = new Set();
+        let salesOptionFlavorFilters = new Set();
+        let salesOptionViewMode = 'group';
         let salesOptionChartInstances = {};
 
         function salesParseNumber(value) {
@@ -4184,54 +4373,264 @@ ${getSkuLabelByKey(skuKey)}`);
             return escapeHtml(value === null || value === undefined ? '' : String(value));
         }
 
+        function salesField(row, keys) {
+            for (const key of keys) {
+                const value = row?.[key];
+                if (value !== undefined && value !== null && String(value).trim() !== '') return value;
+            }
+            return '';
+        }
+
         function salesOptionName(row) {
-            return row['옵션명'] || row['상품명'] || '(옵션명 없음)';
+            const raw = salesField(row, ['옵션명','옵션 이름','옵션이름','판매옵션','판매 옵션']);
+            if (raw) return String(raw).trim();
+            if (row?.optionName !== undefined && row?.optionName !== null && String(row.optionName).trim() !== '') return String(row.optionName).trim();
+            const product = salesField(row, ['상품명']) || row?.productName;
+            return product ? String(product).trim() : '';
         }
 
         function salesExtractPackCount(row) {
-            const text = `${row['옵션명'] || ''} ${row['상품명'] || ''}`;
-            const m = text.match(/(\d+)\s*(?:개|개입)/i);
+            const presetPack = salesParseNumber(row?.pack);
+            if (presetPack > 0) return presetPack;
+            const optionText = String(salesField(row, ['옵션명','옵션 이름','옵션이름','판매옵션','판매 옵션']) || row?.optionName || '').trim();
+            const fallbackText = String(salesField(row, ['옵션 구성','옵션구성','상품 옵션','상품옵션','상품명']) || row?.productName || '').trim();
+            const m = `${optionText} ${fallbackText}`.match(/(?:^|[,|\s])(?:수량\s*[:：]?\s*)?(\d+)\s*(?:개입|개)(?![A-Za-z])/i);
             return m ? parseInt(m[1],10) : 1;
         }
 
+        function salesOptionText(row) {
+            const keys = [
+                '옵션명','옵션 이름','옵션이름','옵션 규격','옵션규격','옵션 속성','옵션속성','판매옵션','판매 옵션',
+                '옵션 구성','옵션구성','상품 옵션','상품옵션','규격','내용량','용량','중량','상품명'
+            ];
+            return keys.map(k => row?.[k]).filter(v => v !== undefined && v !== null && String(v).trim() !== '').join(' | ');
+        }
+
         function salesExtractWeight(row) {
-            const text = `${row['옵션명'] || ''} ${row['상품명'] || ''}`;
-            const g = text.match(/(\d+(?:\.\d+)?)\s*g\b/i);
-            if (g) return parseFloat(g[1]);
-            const kg = text.match(/(\d+(?:\.\d+)?)\s*kg\b/i);
-            if (kg) return parseFloat(kg[1]) * 1000;
+            const presetWeight = salesParseNumber(row?.weight);
+            if (presetWeight > 0) return presetWeight;
+            const optionOnly = String(salesField(row, ['옵션명','옵션 이름','옵션이름','판매옵션','판매 옵션']) || row?.optionName || '').trim();
+            const allText = salesOptionText(row) + (row?.productName ? ` | ${row.productName}` : '');
+            const kg = optionOnly.match(/(\d+(?:[.,]\d+)?)\s*(?:kg|킬로그램)(?![A-Za-z])/i) || allText.match(/(\d+(?:[.,]\d+)?)\s*(?:kg|킬로그램)(?![A-Za-z])/i);
+            if (kg) return parseFloat(kg[1].replace(',', '.')) * 1000;
+            const g = optionOnly.match(/(\d+(?:[.,]\d+)?)\s*(?:g|gram|그램)(?![A-Za-z])/i) || allText.match(/(\d+(?:[.,]\d+)?)\s*(?:g|gram|그램)(?![A-Za-z])/i);
+            if (g) return parseFloat(g[1].replace(',', '.'));
+            const explicitKeys = ['규격','내용량','용량','중량','옵션 규격','옵션규격'];
+            for (const key of explicitKeys) {
+                const v = row?.[key];
+                if (v === undefined || v === null || String(v).trim() === '') continue;
+                const n = String(v).replace(/,/g,'').match(/(\d+(?:\.\d+)?)/);
+                if (n) {
+                    const num = parseFloat(n[1]);
+                    if (num > 0 && num <= 10000) return num;
+                }
+            }
             return 0;
         }
 
+        function salesExtractFlavor(row) {
+            const explicit = salesField(row, ['맛','맛 종류','맛종류','맛/종류','맛구분','플레이버','Flavor','flavor','Taste','taste']);
+            if (explicit) return String(explicit).trim();
+            const optionText = String(salesField(row, ['옵션명','옵션 이름','옵션이름','판매옵션','판매 옵션']) || row?.optionName || '').trim();
+            const productText = String(salesField(row, ['상품명']) || row?.productName || '').trim();
+            const texts = [optionText, productText];
+            for (const text of texts) {
+                if (!text) continue;
+                const matches = [...text.matchAll(/([가-힣A-Za-z0-9][가-힣A-Za-z0-9._-]{0,30}맛)(?=\s*(?:[,|()\/]|$))/gi)];
+                if (matches.length) return matches[matches.length-1][1].trim();
+            }
+            for (const text of texts) {
+                if (!text) continue;
+                const matches = [...text.matchAll(/([가-힣A-Za-z0-9][가-힣A-Za-z0-9._-]{0,15}(?:\s+[가-힣A-Za-z0-9][가-힣A-Za-z0-9._-]{0,15})?\s*맛)(?=\s*(?:[,|()\/]|$))/gi)];
+                if (matches.length) {
+                    const candidate = matches[matches.length-1][1].trim();
+                    const parts = candidate.split(/\s+/).filter(Boolean);
+                    return parts.length > 2 ? parts.slice(-2).join(' ') : candidate;
+                }
+            }
+            return '맛 구분 없음';
+        }
+
+        function salesNormalizeProductFamily(row) {
+            const prodId = String(row?.['등록상품ID'] ?? row?.['등록 상품 ID'] ?? row?.productId ?? '').trim();
+            if (prodId) return `P:${prodId}`;
+            const product = String(salesField(row, ['상품명']) || row?.productName || salesOptionName(row) || '').trim();
+            return `N:${product.replace(/\d+(?:[.,]\d+)?\s*(?:kg|킬로그램|g|gram|그램)\b/gi,' ').replace(/\d+\s*(?:개입|개)\b/gi,' ').replace(/[,|/]+/g,' ').replace(/\s+/g,' ').trim().toLowerCase()}`;
+        }
+
+        function salesGroupLabel(rowOrItem) {
+            const weight = salesExtractWeight(rowOrItem);
+            const flavor = rowOrItem?.flavor || salesExtractFlavor(rowOrItem);
+            const weightLabel = weight > 0 ? salesWeightLabel(weight) : '규격 미상';
+            const flavorLabel = flavor && flavor !== '맛 구분 없음' ? flavor : '';
+            return flavorLabel ? `${weightLabel} · ${flavorLabel}` : weightLabel;
+        }
+
         function salesCompactOptionLabel(row) {
+            if (row?.optionName && row?.viewMode === 'sku') return String(row.optionName);
+            if (row?.groupLabel) return String(row.groupLabel);
+            const optionName = salesOptionName(row);
             const weight = salesExtractWeight(row);
             const pack = salesExtractPackCount(row);
-            return `${weight ? weight+'g' : '규격없음'} ${pack}개입`;
+            if (optionName && optionName !== '(옵션명 없음)') return optionName;
+            if (weight) return `${weight}g${pack ? ` ${pack}개입` : ''}`;
+            return '옵션 정보 없음';
+        }
+
+        function salesRawPackageQty(row) {
+            return salesParseNumber(row?.['판매량'] ?? row?.['총 판매수']);
+        }
+
+        function salesUnitQty(row) {
+            const packageQty = salesRawPackageQty(row);
+            const pack = Math.max(1, salesExtractPackCount(row));
+            return packageQty * pack;
         }
 
         function salesAggregateRows(rows) {
             const map = new Map();
             rows.forEach(r => {
                 const optId = String(r['옵션 ID'] ?? r['옵션ID'] ?? '').trim();
-                const name = salesOptionName(r);
-                const prodId = String(r['등록상품ID'] ?? '').trim();
-                const key = optId ? `OPT:${optId}` : `ROW:${prodId}|${name}`;
-                if (!map.has(key)) {
-                    map.set(key, {
-                        key, optionId: optId || '-', productId: prodId || '-', optionName: name,
-                        productName: r['상품명'] || '-', weight: salesExtractWeight(r), pack: salesExtractPackCount(r),
-                        orders: 0, qty: 0, revenue: 0, totalRevenue: 0
-                    });
-                }
-                const item = map.get(key);
-                item.orders += salesParseNumber(r['주문']);
-                item.qty += salesParseNumber(r['판매량'] ?? r['총 판매수']);
+                const prodId = String(r['등록상품ID'] ?? r['등록 상품 ID'] ?? '').trim();
+                const familyKey = salesNormalizeProductFamily(r);
+                const weight = salesExtractWeight(r);
+                const weightLabel = salesWeightLabel(weight);
+                const flavor = salesExtractFlavor(r);
+                const key = `${familyKey}|W:${weightLabel}|F:${flavor}`;
+                const rowPack = Math.max(1, salesExtractPackCount(r));
+                const rowPackageQty = salesRawPackageQty(r);
+                const rowUnitQty = salesUnitQty(r);
+                if (!map.has(key)) map.set(key, {
+                    key, optionId: optId || '-', productId: prodId || '-', optionIds:new Set(), productIds:new Set(),
+                    optionName:salesGroupLabel({weight, flavor}), productName:r['상품명'] || r['상품 이름'] || '-', weight, flavor,
+                    groupLabel:salesGroupLabel({weight, flavor}), pack:rowPack, packVariants:new Set(), hasBundle:rowPack>1,
+                    orders:0, packageQty:0, qty:0, revenue:0, totalRevenue:0, viewMode:'group'
+                });
+                const item=map.get(key);
+                if(optId) item.optionIds.add(optId); if(prodId) item.productIds.add(prodId);
+                item.orders += salesParseNumber(r['주문']); item.packageQty += rowPackageQty; item.qty += rowUnitQty;
                 item.revenue += salesParseNumber(r['매출(원)'] ?? r['총 매출(원)']);
                 item.totalRevenue += salesParseNumber(r['총 매출(원)'] ?? r['매출(원)']);
-                item.weight = item.weight || salesExtractWeight(r);
-                item.pack = item.pack || salesExtractPackCount(r);
+                item.packVariants.add(rowPack); item.hasBundle = item.hasBundle || rowPack>1;
+            });
+            return [...map.values()].map(item=>{
+                const packs=[...item.packVariants].sort((a,b)=>a-b), optionIds=[...item.optionIds], productIds=[...item.productIds];
+                return {...item, optionId:optionIds.length?optionIds.join(', '):'-', productId:productIds.length?productIds.join(', '):item.productId,
+                    packVariants:packs, pack:packs.length===1?packs[0]:(packs.length?Math.max(...packs):1), packLabel:packs.length?packs.map(v=>`${v}개입`).join(' / '):'-'};
+            });
+        }
+
+        function salesSkuRows(rows) {
+            const map = new Map();
+            rows.forEach(r=>{
+                const optionId=String(r['옵션 ID'] ?? r['옵션ID'] ?? '').trim();
+                const productId=String(r['등록상품ID'] ?? r['등록 상품 ID'] ?? '').trim();
+                const weight=salesExtractWeight(r), flavor=salesExtractFlavor(r), pack=Math.max(1,salesExtractPackCount(r));
+                const fallbackKey=`${salesNormalizeProductFamily(r)}|N:${salesOptionName(r)}|W:${salesWeightLabel(weight)}|F:${flavor}|P:${pack}`;
+                const key=optionId?`O:${optionId}|P:${productId}`:fallbackKey;
+                const packageQty=salesRawPackageQty(r), qty=salesUnitQty(r), revenue=salesParseNumber(r['매출(원)'] ?? r['총 매출(원)']);
+                if(!map.has(key)) map.set(key,{key,optionId:optionId||'-',productId:productId||'-',optionName:salesOptionName(r)||salesGroupLabel({weight,flavor}),productName:r['상품명']||r['상품 이름']||'-',weight,flavor,pack,packLabel:`${pack}개입`,orders:0,packageQty:0,qty:0,revenue:0,totalRevenue:0,hasBundle:pack>1,viewMode:'sku',groupLabel:salesGroupLabel({weight,flavor})});
+                const item=map.get(key); item.orders+=salesParseNumber(r['주문']); item.packageQty+=packageQty; item.qty+=qty; item.revenue+=revenue; item.totalRevenue+=salesParseNumber(r['총 매출(원)'] ?? r['매출(원)']);
             });
             return [...map.values()];
+        }
+
+        function salesWeightLabel(value) {
+            const n=salesParseNumber(value); if(!(n>0)) return '규격 미상';
+            const rounded=Math.abs(n-Math.round(n))<0.000001?String(Math.round(n)):String(Number(n.toFixed(2))); return `${rounded}g`;
+        }
+
+        function salesWeightGroups(items) {
+            const map=new Map();
+            items.forEach(i=>{ const label=salesWeightLabel(i.weight); if(!map.has(label)) map.set(label,{label,weight:i.weight>0?i.weight:0,qty:0,rev:0,orders:0,itemCount:0}); const g=map.get(label); g.qty+=salesParseNumber(i.qty); g.rev+=salesParseNumber(i.revenue); g.orders+=salesParseNumber(i.orders); g.itemCount+=1; });
+            return [...map.values()].sort((a,b)=>a.weight===0&&b.weight!==0?1:a.weight!==0&&b.weight===0?-1:a.weight-b.weight);
+        }
+
+        function salesFlavorGroups(items) {
+            const map=new Map();
+            items.forEach(i=>{ const label=i.flavor || '맛 구분 없음'; if(!map.has(label)) map.set(label,{label,qty:0,rev:0,orders:0,itemCount:0}); const g=map.get(label); g.qty+=salesParseNumber(i.qty); g.rev+=salesParseNumber(i.revenue); g.orders+=salesParseNumber(i.orders); g.itemCount+=1; });
+            return [...map.values()].sort((a,b)=>b.qty-a.qty || a.label.localeCompare(b.label,'ko'));
+        }
+
+        function renderSalesOptionFilterChips() {
+            const grouped=salesAggregateRows(salesOptionRawRows);
+            const capacityBox=document.getElementById('salesOptionCapacityFilters');
+            const flavorBox=document.getElementById('salesOptionFlavorFilters');
+            const capacities=salesWeightGroups(grouped).map(g=>g.label);
+            const flavors=salesFlavorGroups(grouped).map(g=>g.label);
+            const chip=(label,active,onclick,title='')=>`<button type="button" title="${salesEscape(title||label)}" onclick="${onclick}" class="sales-option-filter-btn px-2.5 py-1.5 text-[11px] rounded-lg border ${active?'bg-white shadow-sm border-slate-300 text-slate-800 font-bold':'border-transparent text-slate-600 font-medium hover:bg-white/80'}"><span class="inline-block w-2 h-2 rounded-full mr-1 align-middle ${active?'bg-blue-500':'bg-slate-300'}"></span>${salesEscape(label)}</button>`;
+            if(capacityBox){
+                capacityBox.innerHTML=`<span class="text-[10px] font-bold text-slate-500 mr-0.5">용량</span>${capacities.length?capacities.map(label=>chip(label,salesOptionCapacityFilters.has(label),`toggleSalesCapacityFilter('${salesEscape(label)}')`)).join(''): '<span class="text-[10px] text-slate-400">데이터 없음</span>'}`;
+            }
+            if(flavorBox){
+                flavorBox.innerHTML=`<span class="text-[10px] font-bold text-slate-500 mr-0.5">맛</span>${flavors.length?flavors.map(label=>chip(label,salesOptionFlavorFilters.has(label),`toggleSalesFlavorFilter('${salesEscape(label)}')`)).join(''): '<span class="text-[10px] text-slate-400">데이터 없음</span>'}`;
+            }
+        }
+
+        function setSalesOptionViewMode(mode) {
+            salesOptionViewMode=(mode==='sku')?'sku':'group';
+            document.getElementById('salesViewGroupBtn')?.classList.toggle('active',salesOptionViewMode==='group');
+            document.getElementById('salesViewSkuBtn')?.classList.toggle('active',salesOptionViewMode==='sku');
+            document.getElementById('salesViewGroupBtn')?.classList.toggle('bg-white',salesOptionViewMode==='group');
+            document.getElementById('salesViewSkuBtn')?.classList.toggle('bg-white',salesOptionViewMode==='sku');
+            document.getElementById('salesViewGroupBtn')?.classList.toggle('shadow-sm',salesOptionViewMode==='group');
+            document.getElementById('salesViewSkuBtn')?.classList.toggle('shadow-sm',salesOptionViewMode==='sku');
+            document.getElementById('salesViewGroupBtn')?.classList.toggle('text-slate-800',salesOptionViewMode==='group');
+            document.getElementById('salesViewSkuBtn')?.classList.toggle('text-slate-800',salesOptionViewMode==='sku');
+            document.getElementById('salesViewGroupBtn')?.classList.toggle('text-slate-600',salesOptionViewMode!=='group');
+            document.getElementById('salesViewSkuBtn')?.classList.toggle('text-slate-600',salesOptionViewMode!=='sku');
+            const h=document.getElementById('salesOptionPrimaryHeader'); if(h) h.textContent=salesOptionViewMode==='sku'?'SKU 옵션명':'용량 · 맛 그룹';
+            renderSalesOptionTable();
+        }
+
+        function toggleSalesCapacityFilter(label) {
+            if(salesOptionCapacityFilters.has(label)) salesOptionCapacityFilters.delete(label); else salesOptionCapacityFilters.add(label);
+            renderSalesOptionFilterChips(); renderSalesOptionTable();
+        }
+
+        function toggleSalesFlavorFilter(label) {
+            if(salesOptionFlavorFilters.has(label)) salesOptionFlavorFilters.delete(label); else salesOptionFlavorFilters.add(label);
+            renderSalesOptionFilterChips(); renderSalesOptionTable();
+        }
+
+        function clearSalesOptionFilters() {
+            salesOptionCapacityFilters.clear(); salesOptionFlavorFilters.clear(); salesOptionFilter='all';
+            renderSalesOptionFilterChips(); renderSalesOptionTable();
+        }
+
+        function getSalesOptionTableItems() {
+            let items=salesOptionViewMode==='sku'?salesSkuRows(salesOptionRawRows):salesAggregateRows(salesOptionRawRows);
+            if(salesOptionCapacityFilters.size) items=items.filter(i=>salesOptionCapacityFilters.has(salesWeightLabel(i.weight)));
+            if(salesOptionFlavorFilters.size) items=items.filter(i=>salesOptionFlavorFilters.has(i.flavor||'맛 구분 없음'));
+            if(salesOptionFilter==='bundle') items=items.filter(i=>i.hasBundle);
+            return items;
+        }
+
+        function salesTableFilteredSummary(items) {
+            const totalQty=items.reduce((a,b)=>a+b.qty,0), totalRevenue=items.reduce((a,b)=>a+b.revenue,0), totalOrders=items.reduce((a,b)=>a+b.orders,0), totalPackageQty=items.reduce((a,b)=>a+b.packageQty,0);
+            const avg10g=items.filter(i=>i.weight>0&&i.qty>0).map(i=>(i.revenue/Math.max(i.qty,1))/i.weight*10); const avg10gValue=avg10g.length?avg10g.reduce((a,b)=>a+b,0)/avg10g.length:0;
+            return {items,totalQty,totalRevenue,totalOrders,totalPackageQty,avg10g:avg10gValue};
+        }
+
+        function renderSalesOptionTable() {
+            const items=getSalesOptionTableItems(), tableSummary=salesTableFilteredSummary(items), tbody=document.getElementById('salesOptionTableBody'); if(!tbody) return;
+            tbody.innerHTML=items.map(i=>{
+                const avgPrice=i.packageQty>0?i.revenue/i.packageQty:0, per10g=(i.weight>0&&i.qty>0)?(i.revenue/i.qty)/i.weight*10:0;
+                const qShare=tableSummary.totalQty>0?i.qty/tableSummary.totalQty*100:0, rShare=tableSummary.totalRevenue>0?i.revenue/tableSummary.totalRevenue*100:0;
+                const primary=salesOptionViewMode==='sku'?salesOptionName(i):salesGroupLabel(i);
+                const sub=salesOptionViewMode==='sku'?`${salesEscape(i.groupLabel||'')}${i.packLabel?` · ${salesEscape(i.packLabel)}`:''}`:`SKU ${salesEscape(i.optionId||'-')}`;
+                return `<tr class="hover:bg-slate-50"><td class="py-3 px-3 font-semibold text-slate-800" title="${salesEscape(salesOptionViewMode==='sku'?i.optionName:i.groupLabel)}"><div>${salesEscape(primary)}</div><div class="text-[10px] font-normal text-slate-400 mt-0.5">${sub}</div></td><td class="py-3 px-3 text-slate-500 font-mono text-[10px]"><div>P: ${salesEscape(i.productId)}</div><div class="text-slate-400">O: ${salesEscape(i.optionId)}</div></td><td class="py-3 px-3 text-right text-slate-700">${salesParseNumber(i.orders).toLocaleString('ko-KR')}건</td><td class="py-3 px-3 text-right font-bold text-slate-900">${salesParseNumber(i.qty).toLocaleString('ko-KR')}개</td><td class="py-3 px-3 text-right text-slate-600">${qShare.toFixed(2)}%</td><td class="py-3 px-3 text-right text-slate-700">₩${Math.round(avgPrice).toLocaleString('ko-KR')}</td><td class="py-3 px-3 text-right font-bold text-orange-600">₩${Math.round(i.revenue).toLocaleString('ko-KR')}</td><td class="py-3 px-3 text-right text-slate-600">${rShare.toFixed(2)}%</td><td class="py-3 px-3 text-right text-slate-600">${per10g?Math.round(per10g)+'원':'-'}</td></tr>`;
+            }).join('');
+            document.getElementById('salesTableTotalQty').textContent=tableSummary.totalQty.toLocaleString('ko-KR');
+            document.getElementById('salesTableTotalRev').textContent='₩'+Math.round(tableSummary.totalRevenue).toLocaleString('ko-KR');
+            document.getElementById('salesTableAvg10g').textContent=tableSummary.avg10g?`평균 ${Math.round(tableSummary.avg10g)}원`:'-';
+            const totalLabel=document.querySelector('#salesOptionTableBody')?.closest('table')?.querySelector('tfoot td[colspan="3"]');
+            if(totalLabel){
+                const cap=salesOptionCapacityFilters.size?[...salesOptionCapacityFilters].join(', '):'전체 용량';
+                const flav=salesOptionFlavorFilters.size?[...salesOptionFlavorFilters].join(', '):'전체 맛';
+                const mode=salesOptionViewMode==='sku'?'SKU별':'그룹';
+                totalLabel.textContent=`${mode} · ${cap} · ${flav} 합계`;
+            }
         }
 
         function salesOptionSummary() {
@@ -4239,17 +4638,24 @@ ${getSkuLabelByKey(skuKey)}`);
             const totalQty = items.reduce((a,b)=>a+b.qty,0);
             const totalRevenue = items.reduce((a,b)=>a+b.revenue,0);
             const totalOrders = items.reduce((a,b)=>a+b.orders,0);
-            const weight = {'30g':{qty:0,rev:0},'100g':{qty:0,rev:0},'기타':{qty:0,rev:0}};
+            const weightGroups = salesWeightGroups(items);
+            const weight = {};
+            weightGroups.forEach(g => { weight[g.label] = {qty:g.qty, rev:g.rev, orders:g.orders}; });
             const bundle = {'1개입':{orders:0,qty:0,rev:0},'2개입':{orders:0,qty:0,rev:0},'3개입':{orders:0,qty:0,rev:0},'기타':{orders:0,qty:0,rev:0}};
-            items.forEach(i => {
-                const wk = i.weight===30 ? '30g' : i.weight===100 ? '100g' : '기타';
-                weight[wk].qty += i.qty; weight[wk].rev += i.revenue;
-                const bk = i.pack===1 ? '1개입' : i.pack===2 ? '2개입' : i.pack===3 ? '3개입' : '기타';
-                bundle[bk].orders += i.orders; bundle[bk].qty += i.qty; bundle[bk].rev += i.revenue;
+            // 번들 구조는 용량×맛으로 합친 집계 행이 아니라 원본 SKU의 입수량을 기준으로 다시 계산합니다.
+            // 예: 50g 소금후추맛이 1/2/4개입으로 나뉘어 있어도 각각의 번들 판매수량을 정확히 반영합니다.
+            salesOptionRawRows.forEach(r => {
+                const pack = Math.max(1, salesExtractPackCount(r));
+                const bk = pack===1 ? '1개입' : pack===2 ? '2개입' : pack===3 ? '3개입' : '기타';
+                bundle[bk].orders += salesParseNumber(r['주문']);
+                bundle[bk].qty += salesUnitQty(r);
+                bundle[bk].rev += salesParseNumber(r['매출(원)'] ?? r['총 매출(원)']);
             });
             const topQty = [...items].sort((a,b)=>b.qty-a.qty)[0] || null;
             const topRev = [...items].sort((a,b)=>b.revenue-a.revenue)[0] || null;
-            return {items,totalQty,totalRevenue,totalOrders,weight,bundle,topQty,topRev};
+            const topWeightQty = [...weightGroups].sort((a,b)=>b.qty-a.qty)[0] || null;
+            const topWeightRev = [...weightGroups].sort((a,b)=>b.rev-a.rev)[0] || null;
+            return {items,totalQty,totalRevenue,totalOrders,weight,weightGroups,bundle,topQty,topRev,topWeightQty,topWeightRev};
         }
 
         function destroySalesOptionChart(id) {
@@ -4263,16 +4669,17 @@ ${getSkuLabelByKey(skuKey)}`);
             destroySalesOptionChart(id);
             const el=document.getElementById(id); if(!el) return;
             salesOptionChartInstances[id] = new Chart(el.getContext('2d'), {
-                type:'doughnut', data:{labels,datasets:[{data:values,backgroundColor:['#38BDF8','#F97316','#94A3B8'],borderWidth:2,borderColor:'#fff'}]},
+                type:'doughnut', data:{labels,datasets:[{data:values,backgroundColor:labels.map((_,idx)=>`hsla(${(idx*53)%360},78%,58%,.88)`),borderWidth:2,borderColor:'#fff'}]},
                 plugins:[chartValueLabelPlugin], options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{font:{size:10,weight:'700'},padding:10}},title:{display:true,text:titleMode,font:{size:11,weight:'800'}},valueLabels:{display:true,currency:titleMode.includes('매출'),showPct:true,pctMode:'stack',fontSize:10}}}
             });
         }
 
         function renderSalesOptionCharts(summary) {
-            const wtLabels=['30g 제품군','100g 제품군'];
-            const wtQty=[summary.weight['30g'].qty,summary.weight['100g'].qty];
-            const wtRev=[summary.weight['30g'].rev,summary.weight['100g'].rev];
-            renderSalesOptionDoughnut('salesChartVolumeShare',wtLabels,wtQty,'판매량 비중');
+            const groups = summary.weightGroups;
+            const wtLabels = groups.map(g=>g.label);
+            const wtQty = groups.map(g=>g.qty);
+            const wtRev = groups.map(g=>g.rev);
+            renderSalesOptionDoughnut('salesChartVolumeShare',wtLabels,wtQty,'낱개 판매량 비중');
             renderSalesOptionDoughnut('salesChartRevenueShare',wtLabels,wtRev,'매출액 비중');
 
             const items = summary.items.length>20 ? [...summary.items].sort((a,b)=>b.revenue-a.revenue).slice(0,20) : summary.items;
@@ -4280,24 +4687,24 @@ ${getSkuLabelByKey(skuKey)}`);
             const comboEl=document.getElementById('salesChartOptionCombo');
             if (comboEl) salesOptionChartInstances['salesChartOptionCombo']=new Chart(comboEl.getContext('2d'),{
                 type:'bar',data:{labels:items.map(i=>salesCompactOptionLabel(i)),datasets:[
-                    {type:'bar',label:'판매량',data:items.map(i=>i.qty),backgroundColor:items.map(i=>i.weight===100?'rgba(249,115,22,.78)':'rgba(56,189,248,.78)'),borderRadius:5,yAxisID:'y'},
+                    {type:'bar',label:'낱개 판매량',data:items.map(i=>i.qty),backgroundColor:items.map((i,idx)=>`hsla(${(idx*47)%360},75%,55%,.78)`),borderRadius:5,yAxisID:'y'},
                     {type:'line',label:'매출액 (만원)',data:items.map(i=>Math.round(i.revenue/10000*10)/10),borderColor:'#2563EB',backgroundColor:'#2563EB',pointRadius:4,tension:.25,borderWidth:2.5,yAxisID:'y1'}
-                ]},plugins:[chartValueLabelPlugin],options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,title:{display:true,text:'판매량',font:{size:10}},ticks:{font:{size:10}}},y1:{beginAtZero:true,position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'매출액(만원)',font:{size:10}},ticks:{font:{size:10}}}},plugins:{legend:{position:'bottom',labels:{font:{size:10,weight:'700'},padding:10}},valueLabels:{display:true,showPct:false,fontSize:10}}}
+                ]},plugins:[chartValueLabelPlugin],options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,title:{display:true,text:'낱개 판매량',font:{size:10}},ticks:{font:{size:10}}},y1:{beginAtZero:true,position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'매출액(만원)',font:{size:10}},ticks:{font:{size:10}}}},plugins:{legend:{position:'bottom',labels:{font:{size:10,weight:'700'},padding:10}},valueLabels:{display:true,showPct:false,fontSize:10}}}
             });
             const comboNote=document.getElementById('salesComboChartNote');
-            if(comboNote) comboNote.textContent=summary.items.length>20?`매출 상위 20개 / 전체 ${summary.items.length}개`:`전체 ${summary.items.length}개 옵션`;
+            if(comboNote) comboNote.textContent=summary.items.length>20?`매출 상위 20개 / 전체 ${summary.items.length}개 용량·맛 그룹`:`전체 ${summary.items.length}개 옵션`;
 
             destroySalesOptionChart('salesChartBundle');
             const bundleEl=document.getElementById('salesChartBundle');
             const bLabels=['1개입','2개입','3개입']; const bValues=bLabels.map(k=>summary.bundle[k].qty);
-            if(bundleEl) salesOptionChartInstances['salesChartBundle']=new Chart(bundleEl.getContext('2d'),{type:'bar',data:{labels:bLabels,datasets:[{label:'판매량',data:bValues,backgroundColor:'#A855F7',borderRadius:6}]},plugins:[chartValueLabelPlugin],options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false}},y:{beginAtZero:true,title:{display:true,text:'판매량',font:{size:10}}}},plugins:{legend:{display:false},valueLabels:{display:true,showPct:false,fontSize:10}}}});
+            if(bundleEl) salesOptionChartInstances['salesChartBundle']=new Chart(bundleEl.getContext('2d'),{type:'bar',data:{labels:bLabels,datasets:[{label:'낱개 판매량',data:bValues,backgroundColor:'#A855F7',borderRadius:6}]},plugins:[chartValueLabelPlugin],options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false}},y:{beginAtZero:true,title:{display:true,text:'낱개 판매량',font:{size:10}}}},plugins:{legend:{display:false},valueLabels:{display:true,showPct:false,fontSize:10}}}});
 
             destroySalesOptionChart('salesChartUnitEconomics');
             const unitEl=document.getElementById('salesChartUnitEconomics');
             const unitItems = summary.items.filter(i=>i.weight>0 && i.pack>0).slice(0,15).sort((a,b)=>{
-                const av=(a.revenue/Math.max(a.qty,1))/(a.weight*a.pack)*10; const bv=(b.revenue/Math.max(b.qty,1))/(b.weight*b.pack)*10; return bv-av;
+                const av=(a.revenue/Math.max(a.qty,1))/a.weight*10; const bv=(b.revenue/Math.max(b.qty,1))/b.weight*10; return bv-av;
             });
-            if(unitEl) salesOptionChartInstances['salesChartUnitEconomics']=new Chart(unitEl.getContext('2d'),{type:'bar',data:{labels:unitItems.map(i=>salesCompactOptionLabel(i)),datasets:[{label:'10g당 실질 소비자 부담 가격 (원)',data:unitItems.map(i=>Math.round((i.revenue/Math.max(i.qty,1))/(i.weight*i.pack)*10)),backgroundColor:unitItems.map(i=>i.weight===100?'#10B981':'#38BDF8'),borderRadius:6}]},plugins:[chartValueLabelPlugin],options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{beginAtZero:true,title:{display:true,text:'10g당 가격 (원)',font:{size:10}},grid:{color:'#F1F5F9'},ticks:{font:{size:10}}},y:{grid:{display:false},ticks:{font:{size:10}}}},plugins:{legend:{display:false},valueLabels:{display:true,showPct:false,fontSize:10}}}});
+            if(unitEl) salesOptionChartInstances['salesChartUnitEconomics']=new Chart(unitEl.getContext('2d'),{type:'bar',data:{labels:unitItems.map(i=>salesCompactOptionLabel(i)),datasets:[{label:'10g당 실질 소비자 부담 가격 (원)',data:unitItems.map(i=>Math.round((i.revenue/Math.max(i.qty,1))/i.weight*10)),backgroundColor:unitItems.map((i,idx)=>`hsla(${(idx*47)%360},65%,48%,.78)`),borderRadius:6}]},plugins:[chartValueLabelPlugin],options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{beginAtZero:true,title:{display:true,text:'10g당 가격 (원)',font:{size:10}},grid:{color:'#F1F5F9'},ticks:{font:{size:10}}},y:{grid:{display:false},ticks:{font:{size:10}}}},plugins:{legend:{display:false},valueLabels:{display:true,showPct:false,fontSize:10}}}});
         }
 
         function renderSalesOptionSummary(summary) {
@@ -4305,44 +4712,29 @@ ${getSkuLabelByKey(skuKey)}`);
             document.getElementById('salesKpiQty').textContent=fmt(summary.totalQty);
             document.getElementById('salesKpiRevenue').textContent='₩'+fmt(summary.totalRevenue);
             document.getElementById('salesKpiAov').textContent='₩'+fmt(summary.totalQty>0?summary.totalRevenue/summary.totalQty:0);
-            const topQtyLabel=summary.topQty?`${summary.topQty.weight?summary.topQty.weight+'g':'규격없음'} ${summary.topQty.pack||1}개입`:'-';
-            const topRevLabel=summary.topRev?`${summary.topRev.weight?summary.topRev.weight+'g':'규격없음'} ${summary.topRev.pack||1}개입`:'-';
-            const tq=document.getElementById('salesKpiTopQty'); tq.textContent=topQtyLabel; tq.title=summary.topQty?summary.topQty.optionName:'-';
+            const topQtyLabel=summary.topQty?salesCompactOptionLabel(summary.topQty):'-';
+            const topRevLabel=summary.topRev?salesCompactOptionLabel(summary.topRev):'-';
+            const tq=document.getElementById('salesKpiTopQty'); tq.textContent=topQtyLabel; tq.title=summary.topQty?summary.topQty.groupLabel:'-';
             document.getElementById('salesKpiTopQtySub').textContent=summary.topQty?`${fmt(summary.topQty.qty)}개 (${summary.totalQty?((summary.topQty.qty/summary.totalQty)*100).toFixed(1):'0.0'}%)`:'0개';
-            const tr=document.getElementById('salesKpiTopRev'); tr.textContent=topRevLabel; tr.title=summary.topRev?summary.topRev.optionName:'-';
+            const tr=document.getElementById('salesKpiTopRev'); tr.textContent=topRevLabel; tr.title=summary.topRev?summary.topRev.groupLabel:'-';
             document.getElementById('salesKpiTopRevSub').textContent=summary.topRev?`₩${fmt(summary.topRev.revenue)} (${summary.totalRevenue?((summary.topRev.revenue/summary.totalRevenue)*100).toFixed(1):'0.0'}%)`:'₩0';
 
-            const w30=summary.weight['30g'], w100=summary.weight['100g'];
             const bundleQty=(summary.bundle['2개입'].qty+summary.bundle['3개입'].qty);
-            const p30=summary.totalQty?((w30.qty/summary.totalQty)*100):0, p100=summary.totalQty?((w100.qty/summary.totalQty)*100):0;
-            const r30=summary.totalRevenue?((w30.rev/summary.totalRevenue)*100):0, r100=summary.totalRevenue?((w100.rev/summary.totalRevenue)*100):0;
             const bundleRate=summary.totalQty?((bundleQty/summary.totalQty)*100):0;
-            document.getElementById('salesInsight1').innerHTML=`<span class="font-bold text-sky-700">1. 용량별 판매:</span> 30g 제품군은 <strong>${fmt(w30.qty)}개 (${p30.toFixed(1)}%)</strong>, 매출 <strong>₩${fmt(w30.rev)} (${r30.toFixed(1)}%)</strong>입니다. 100g 제품군은 <strong>${fmt(w100.qty)}개 (${p100.toFixed(1)}%)</strong>, 매출 <strong>₩${fmt(w100.rev)} (${r100.toFixed(1)}%)</strong>입니다.`;
-            document.getElementById('salesInsight2').innerHTML=`<span class="font-bold text-orange-700">2. 매출 드라이버:</span> 최다 매출 옵션은 <strong>${salesEscape(topRevLabel)}</strong>이며, ${summary.topRev?`₩${fmt(summary.topRev.revenue)}로 전체 매출의 ${((summary.topRev.revenue/Math.max(summary.totalRevenue,1))*100).toFixed(1)}%`: '매출 데이터가 없습니다'}를 차지합니다.`;
+            const weightSentence=summary.weightGroups.length
+                ? summary.weightGroups.map(g=>`${g.label} 제품군은 <strong>${fmt(g.qty)}개 (${summary.totalQty?((g.qty/summary.totalQty)*100).toFixed(1):'0.0'}%)</strong>, 매출 <strong>₩${fmt(g.rev)} (${summary.totalRevenue?((g.rev/summary.totalRevenue)*100).toFixed(1):'0.0'}%)</strong>`).join(', ')
+                : '용량 정보가 없습니다';
+            document.getElementById('salesInsight1').innerHTML=`<span class="font-bold text-sky-700">1. 용량별 판매:</span> ${weightSentence}입니다.`;
+            document.getElementById('salesInsight2').innerHTML=`<span class="font-bold text-orange-700">2. 매출 드라이버:</span> 최다 매출 그룹은 <strong>${salesEscape(topRevLabel)}</strong>이며, ${summary.topRev?`₩${fmt(summary.topRev.revenue)}로 전체 매출의 ${((summary.topRev.revenue/Math.max(summary.totalRevenue,1))*100).toFixed(1)}%`: '매출 데이터가 없습니다'}를 차지합니다.`;
             document.getElementById('salesInsight3').innerHTML=`<span class="font-bold text-purple-700">3. 번들링 구조:</span> 2개입·3개입 판매량은 <strong>${fmt(bundleQty)}개 (${bundleRate.toFixed(1)}%)</strong>이며, 1개입 판매량은 <strong>${fmt(summary.bundle['1개입'].qty)}개</strong>입니다.`;
 
-            document.getElementById('salesWeightSummary').innerHTML=['30g','100g'].map(k=>`<div class="flex items-center justify-between px-2 py-2 rounded-lg bg-slate-50 border border-slate-200"><span class="font-semibold text-slate-600">${k} 군</span><span class="font-bold text-slate-800">${fmt(summary.weight[k].qty)}개 · ₩${fmt(summary.weight[k].rev)}</span></div>`).join('');
-            document.getElementById('salesBundleSummary').innerHTML=['1개입','2개입','3개입'].map(k=>`<div class="p-2 rounded-lg ${k==='1개입'?'bg-purple-50':'bg-slate-50'} text-center"><div class="text-[10px] ${k==='1개입'?'text-purple-700':'text-slate-600'} font-medium">${k}</div><div class="text-sm font-bold text-slate-900 mt-0.5">${fmt(summary.bundle[k].qty)}개</div><div class="text-[10px] text-slate-500">₩${fmt(summary.bundle[k].rev)}</div></div>`).join('');
-        }
-
-        function renderSalesOptionTable() {
-            const summary=salesOptionSummary();
-            let items=summary.items;
-            if(salesOptionFilter==='30g') items=items.filter(i=>i.weight===30);
-            else if(salesOptionFilter==='100g') items=items.filter(i=>i.weight===100);
-            else if(salesOptionFilter==='bundle') items=items.filter(i=>i.pack>1);
-            const tbody=document.getElementById('salesOptionTableBody'); if(!tbody) return;
-            tbody.innerHTML=items.map(i=>{
-                const avgPrice=i.qty>0?i.revenue/i.qty:0;
-                const per10g=(i.weight>0&&i.pack>0)?avgPrice/(i.weight*i.pack)*10:0;
-                const qShare=summary.totalQty>0?i.qty/summary.totalQty*100:0;
-                const rShare=summary.totalRevenue>0?i.revenue/summary.totalRevenue*100:0;
-                return `<tr class="hover:bg-slate-50"><td class="py-3 px-3 font-semibold text-slate-800" title="${salesEscape(i.optionName)}">${salesEscape(salesCompactOptionLabel(i))}</td><td class="py-3 px-3 text-slate-500 font-mono text-[10px]"><div>P: ${salesEscape(i.productId)}</div><div class="text-slate-400">O: ${salesEscape(i.optionId)}</div></td><td class="py-3 px-3 text-right text-slate-700">${salesParseNumber(i.orders).toLocaleString('ko-KR')}건</td><td class="py-3 px-3 text-right font-bold text-slate-900">${salesParseNumber(i.qty).toLocaleString('ko-KR')}개</td><td class="py-3 px-3 text-right text-slate-600">${qShare.toFixed(2)}%</td><td class="py-3 px-3 text-right text-slate-700">₩${Math.round(avgPrice).toLocaleString('ko-KR')}</td><td class="py-3 px-3 text-right font-bold text-orange-600">₩${Math.round(i.revenue).toLocaleString('ko-KR')}</td><td class="py-3 px-3 text-right text-slate-600">${rShare.toFixed(2)}%</td><td class="py-3 px-3 text-right text-slate-600">${per10g?Math.round(per10g)+'원':'-'}</td></tr>`;
-            }).join('');
-            document.getElementById('salesTableTotalQty').textContent=summary.totalQty.toLocaleString('ko-KR');
-            document.getElementById('salesTableTotalRev').textContent='₩'+Math.round(summary.totalRevenue).toLocaleString('ko-KR');
-            const validPer10=summary.items.filter(i=>i.weight>0&&i.pack>0).map(i=>(i.revenue/Math.max(i.qty,1))/(i.weight*i.pack)*10);
-            document.getElementById('salesTableAvg10g').textContent=validPer10.length?`평균 ${Math.round(validPer10.reduce((a,b)=>a+b,0)/validPer10.length)}원`:'-';
+            const weightSummaryEl=document.getElementById('salesWeightSummary');
+            if(weightSummaryEl) {
+                weightSummaryEl.className = `grid ${summary.weightGroups.length>2?'grid-cols-2 sm:grid-cols-3':'grid-cols-2'} gap-2 text-xs mt-3`;
+                weightSummaryEl.innerHTML=summary.weightGroups.map(g=>`<div class="flex items-center justify-between px-2 py-2 rounded-lg bg-slate-50 border border-slate-200"><span class="font-semibold text-slate-600">${salesEscape(g.label)} 군</span><span class="font-bold text-slate-800">${fmt(g.qty)}개 · ₩${fmt(g.rev)}</span></div>`).join('');
+            }
+            document.getElementById('salesBundleSummary').innerHTML=['1개입','2개입','3개입'].map(k=>`<div class="p-2 rounded-lg ${k==='1개입'?'bg-purple-50':'bg-slate-50'} text-center"><div class="text-[10px] ${k==='1개입'?'text-purple-700':'text-slate-600'} font-medium">${k}</div><div class="text-sm font-bold text-slate-900 mt-0.5">${fmt(summary.bundle[k].qty)}개</div><div class="text-[10px] text-slate-500">${fmt(summary.bundle[k].orders)}건 · ₩${fmt(summary.bundle[k].rev)}</div></div>`).join('');
+            renderSalesOptionFilterChips();
         }
 
         function renderSalesOptionRawTable() {
@@ -4363,13 +4755,7 @@ ${getSkuLabelByKey(skuKey)}`);
         }
 
         function filterSalesOptionTable(type) {
-            salesOptionFilter=type;
-            document.querySelectorAll('.sales-option-filter-btn').forEach(btn=>{
-                btn.classList.remove('active','bg-white','shadow-sm','text-slate-800');
-                btn.classList.add('text-slate-600');
-            });
-            const active=document.querySelector(`.sales-option-filter-btn[data-filter="${type}"]`);
-            if(active){active.classList.add('active','bg-white','shadow-sm','text-slate-800'); active.classList.remove('text-slate-600');}
+            salesOptionFilter=String(type||'all');
             renderSalesOptionTable();
         }
 
@@ -4405,6 +4791,8 @@ ${getSkuLabelByKey(skuKey)}`);
                     if(missing.length) throw new Error(`필수 컬럼이 없습니다: ${missing.join(', ')}`);
                     salesOptionRawRows=rows;
                     salesOptionFilter='all';
+                    salesOptionCapacityFilters.clear();
+                    salesOptionFlavorFilters.clear();
                     const sizeLabel=`${file.name} · ${rows.length.toLocaleString('ko-KR')}행`;
                     if(status){status.textContent=`${sizeLabel} 로드 완료. 차트와 표를 재계산했습니다.`; status.className='text-[11px] font-semibold text-emerald-600 mt-3';}
                     renderTab8();
@@ -4425,6 +4813,8 @@ ${getSkuLabelByKey(skuKey)}`);
         function resetSalesOptionData(){
             salesOptionRawRows=SALES_OPTION_SAMPLE_DATA.map(r=>({...r}));
             salesOptionFilter='all';
+            salesOptionCapacityFilters.clear();
+            salesOptionFlavorFilters.clear();
             const status=document.getElementById('salesOptionFileStatus');
             if(status){status.textContent='첨부 리포트 기준 샘플 데이터 7개 옵션을 복원했습니다.'; status.className='text-[11px] font-semibold text-blue-600 mt-3';}
             renderTab8();
