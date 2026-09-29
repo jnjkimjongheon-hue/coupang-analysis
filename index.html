@@ -10,6 +10,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- SheetJS (XLSX) CDN -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- html2canvas for full-dashboard PNG export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!-- FontAwesome CDN for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts (Noto Sans KR) -->
@@ -104,6 +106,9 @@
         }
         /* Per-column formula tooltip */
         .formula-tooltip-wrap { position: relative; display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; cursor: help; }
+        .formula-tooltip-wrap.formula-help-left { justify-content: flex-start; }
+        .formula-tooltip-trigger { cursor: help; flex: 0 0 auto; }
+        .formula-tooltip-trigger:hover { color: #2563eb !important; }
         .formula-tooltip { display: none; position: absolute; z-index: 100; top: calc(100% + 6px); right: 0; width: max-content; max-width: 280px; background: #0f172a; color: #fff; font-size: 11px; font-weight: 400; line-height: 1.45; border-radius: 6px; padding: 6px 8px; box-shadow: 0 8px 18px rgba(15,23,42,.18); white-space: normal; text-align: left; pointer-events: none; }
         .formula-tooltip-wrap .formula-tooltip-trigger:hover + .formula-tooltip { display: block; }
         .formula-group-row th { font-size: 10px; letter-spacing: .02em; padding: 7px 8px; text-align: center; border-bottom: 1px solid rgba(148,163,184,.25); }
@@ -163,10 +168,10 @@
         .data-explorer-formula i:hover + .formula-tooltip { display:block; }
         .data-explorer-table { min-width: 1250px; }
 
-        /* Dashboard panel expansion + chart data labels */
-        .dashboard-panel { position: relative; cursor: pointer; transition: box-shadow .18s ease, border-color .18s ease, transform .18s ease; }
-        .dashboard-panel:hover { box-shadow: 0 10px 24px rgba(15,23,42,.08); border-color: #93c5fd; }
-        .dashboard-panel::after { content: "↗"; position: absolute; top: 12px; right: 14px; color: #94a3b8; font-size: 12px; opacity: .65; pointer-events: none; }
+        /* Dashboard panel styling: panel click-to-expand is disabled; explicit full-screen buttons remain active. */
+        .dashboard-panel { position: relative; cursor: default; transition: box-shadow .18s ease, border-color .18s ease, transform .18s ease; }
+        .dashboard-panel:hover { box-shadow: 0 4px 14px rgba(15,23,42,.04); }
+        .dashboard-panel::after { content: none; }
         .panel-tall { min-height: 360px; }
         .panel-chart-tall { min-height: 360px; }
         /* Keep every dashboard panel inside the main content column. When the sidebar is hidden,
@@ -295,7 +300,36 @@
         .keyword-row-checkbox { width:15px; height:15px; accent-color:#2563eb; cursor:pointer; }
         .keyword-history-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:14px; }
         .keyword-history-summary-card { border:1px solid #e2e8f0; border-radius:9px; background:#f8fafc; padding:10px 12px; }
+        .core-sku-cell { width: 150px; min-width: 150px; max-width: 150px; white-space: nowrap !important; overflow: hidden; text-overflow: ellipsis; }
+        .core-sku-label { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.25; }
+        .sku-margin-table { min-width: 1120px; table-layout: fixed; }
+        .sku-margin-table th, .sku-margin-table td { border-right: 1px solid #f1f5f9; vertical-align: middle; }
+        .sku-margin-table th:last-child, .sku-margin-table td:last-child { border-right: 0; }
+        .sku-margin-input { width: 110px; border: 1px solid #cbd5e1; background: #fff; border-radius: 7px; padding: 7px 8px; text-align: right; font-weight: 700; color: #0f172a; outline: none; }
+        .sku-margin-input:focus { border-color:#2563eb; box-shadow:0 0 0 2px rgba(37,99,235,.14); }
+        .sku-margin-input.percent { width: 95px; }
+        .sku-margin-row-unsaved { background: #fffbeb !important; }
+        .sku-margin-status-dot { display:inline-flex; align-items:center; gap:5px; font-size:10px; font-weight:800; }
+        .sku-margin-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; }
+        .sku-margin-summary-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+        @media(max-width:900px){ .sku-margin-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
+        @media(max-width:600px){ .sku-margin-summary-grid{grid-template-columns:1fr;} }
         @media(max-width:700px){ .keyword-history-summary{grid-template-columns:1fr;} }
+
+
+        /* Rocket Growth sales option analysis */
+        .sales-option-dropzone { border:2px dashed #cbd5e1; background:#f8fafc; transition:.18s ease; }
+        .sales-option-dropzone.dragover { border-color:#2563eb; background:#eff6ff; box-shadow:0 0 0 3px rgba(37,99,235,.08); }
+        .sales-option-table { min-width: 1180px; }
+        .sales-option-raw-table { min-width: 1760px; }
+        .sales-option-table th, .sales-option-table td, .sales-option-raw-table th, .sales-option-raw-table td { white-space: nowrap; }
+        .sales-option-kpi { min-height: 112px; }
+        .sales-option-chart-card { min-height: 360px; }
+        .png-export-control { position: relative; }
+        .png-export-menu { position:absolute; right:0; top:calc(100% + 8px); z-index:90; width:220px; background:#fff; color:#0f172a; border:1px solid #cbd5e1; border-radius:10px; box-shadow:0 18px 40px rgba(15,23,42,.20); overflow:hidden; }
+        .png-export-menu button { width:100%; display:flex; align-items:center; gap:9px; padding:10px 12px; text-align:left; font-size:11px; font-weight:800; color:#334155; background:#fff; }
+        .png-export-menu button:hover { background:#f8fafc; color:#1d4ed8; }
+        .png-export-menu .menu-caption { padding:9px 12px 7px; font-size:10px; font-weight:700; color:#94a3b8; background:#f8fafc; border-bottom:1px solid #e2e8f0; }
 
     </style>
 </head>
@@ -331,6 +365,18 @@
                     <span>엑셀 변경</span>
                 </label>
                 <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleFileSelect(event)">
+                <div id="pngExportControl" class="png-export-control">
+                    <button type="button" onclick="togglePngExportMenu(event)" title="01·02 목차 PNG 이미지 추출" aria-label="01·02 목차 PNG 이미지 추출" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 flex items-center justify-center transition">
+                        <i class="fa-solid fa-image text-blue-300 text-sm"></i>
+                    </button>
+                    <div id="pngExportMenu" class="png-export-menu hidden">
+                        <div class="menu-caption"><i class="fa-solid fa-image mr-1"></i> PNG 이미지 추출</div>
+                        <button type="button" onclick="exportDashboardTabPng('tab1')"><i class="fa-solid fa-chart-pie text-blue-600 w-4"></i><span>01 Executive Overview</span></button>
+                        <button type="button" onclick="exportDashboardTabPng('tab2')"><i class="fa-solid fa-layer-group text-indigo-600 w-4"></i><span>02 지면 성과 분석</span></button>
+                        <button type="button" onclick="exportDashboardTabsCombinedPng()"><i class="fa-solid fa-images text-emerald-600 w-4"></i><span>01 + 02 연속 PNG</span></button>
+                        <button type="button" onclick="exportCurrentDashboardTabPng()"><i class="fa-solid fa-display text-slate-600 w-4"></i><span>현재 선택 목차 PNG</span></button>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
@@ -429,18 +475,30 @@
                     </div>
                 </button>
 
+                <button onclick="switchTab('tab8')" id="btn-tab8" class="tab-btn p-2.5 text-sm font-semibold flex items-center space-x-3 w-full text-left cursor-pointer">
+                    <div class="tab-icon w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-chart-column text-sm"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="tab-badge w-max mb-0.5" style="font-size: 9px; padding: 1px 5px;">08</span>
+                        <span class="leading-tight">판매 옵션 분석</span>
+                    </div>
+                </button>
+
+
             </div>
         </aside>
         <!-- Right Content Area -->
         <main class="flex-1 min-w-0 flex flex-col space-y-6">
             <!-- Global Filters Panel -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 transition-all">
+        <div id="globalFilterPanel" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 transition-all">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
-                <div class="flex items-center space-x-2">
-                    <i class="fa-solid fa-filter text-blue-600"></i>
-                    <h2 class="font-bold text-slate-800 text-sm">글로벌 통합 필터 (AND 조건)</h2>
+                <div class="flex items-center space-x-2 min-w-0">
+                    <i class="fa-solid fa-filter text-blue-600 shrink-0"></i>
+                    <h2 class="font-bold text-slate-800 text-sm shrink-0">글로벌 통합 필터 (AND 조건)</h2>
+                    <span id="currentReviewedProducts" class="hidden md:inline-flex items-center max-w-[560px] truncate px-2 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-100 text-[10px] font-semibold" title="현재 검토 상품"></span>
                 </div>
-                <div class="flex items-center space-x-3 text-xs">
+                <div class="flex items-center space-x-3 text-xs shrink-0">
                     <button onclick="resetFilters()" class="text-slate-500 hover:text-blue-600 font-medium flex items-center space-x-1">
                         <i class="fa-solid fa-rotate-left"></i>
                         <span>필터 초기화</span>
@@ -497,86 +555,86 @@
             <!-- 11 Key Metric Cards Grid: 분석 흐름 기준 재배치 -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <!-- 1. Revenue -->
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-visible">
                     <div class="absolute top-0 right-0 w-2 h-full bg-blue-600"></div>
-                    <p class="text-xs font-semibold text-slate-500 mb-1">총 전환 매출액 (<span class="attrLabel">14일</span>)</p>
+                    <p class="text-xs font-semibold text-slate-500 mb-1"><span class="formula-tooltip-wrap formula-help-left"><span>총 전환 매출액 (<span class="attrLabel">14일</span>)</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: 선택된 기여기간의 직접 전환 매출 + 간접 전환 매출</span></span></p>
                     <h3 id="kpiRevenue" class="text-xl font-extrabold text-slate-900">₩0</h3>
                     <p id="kpiRevenueSub" class="text-xs text-emerald-600 font-medium mt-1"><i class="fa-solid fa-arrow-trend-up mr-1"></i>직접/간접 합산</p>
                 </div>
 
                 <!-- 2. Spend -->
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-visible">
                     <div class="absolute top-0 right-0 w-2 h-full bg-rose-500"></div>
-                    <p class="text-xs font-semibold text-slate-500 mb-1">총 소진 광고비</p>
+                    <p class="text-xs font-semibold text-slate-500 mb-1"><span class="formula-tooltip-wrap formula-help-left"><span>총 소진 광고비</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: 필터링된 광고 데이터의 광고비 합계</span></span></p>
                     <h3 id="kpiSpend" class="text-xl font-extrabold text-slate-900">₩0</h3>
                     <p id="kpiSpendSub" class="text-xs text-slate-500 font-medium mt-1">CPC 과금 총액</p>
                 </div>
 
                 <!-- 3. ROAS -->
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-visible">
                     <div class="absolute top-0 right-0 w-2 h-full bg-emerald-500"></div>
-                    <p class="text-xs font-semibold text-slate-500 mb-1">총 광고수익률 (ROAS)</p>
+                    <p class="text-xs font-semibold text-slate-500 mb-1"><span class="formula-tooltip-wrap formula-help-left"><span>총 광고수익률 (ROAS)</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: (총 전환 매출액 / 총 소진 광고비) × 100</span></span></p>
                     <h3 id="kpiROAS" class="text-xl font-extrabold text-emerald-600">0.00%</h3>
                     <p id="kpiROASSub" class="text-xs text-slate-500 font-medium mt-1">실제 광고 효율</p>
                 </div>
 
                 <!-- 6. BEP ROAS -->
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-visible">
                     <div class="absolute top-0 right-0 w-2 h-full bg-violet-500"></div>
-                    <p class="text-xs font-semibold text-slate-500 mb-1">BEP ROAS</p>
+                    <p class="text-xs font-semibold text-slate-500 mb-1"><span class="formula-tooltip-wrap formula-help-left"><span>BEP ROAS</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: 100 / 순마진율(%) × 100 = 판매가 / 순마진액 × 100</span></span></p>
                     <h3 id="kpiBepRoas" class="text-xl font-extrabold text-violet-700">0.00%</h3>
                     <p class="text-xs text-slate-400 font-medium mt-1">손익분기점 최소 ROAS</p>
                 </div>
 
                 <!-- 4. ASP -->
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-visible">
                     <div class="absolute top-0 right-0 w-2 h-full bg-indigo-500"></div>
-                    <p class="text-xs font-semibold text-slate-500 mb-1">평균 판매가 (ASP)</p>
+                    <p class="text-xs font-semibold text-slate-500 mb-1"><span class="formula-tooltip-wrap formula-help-left"><span>평균 판매가 (ASP)</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: 적용된 판매가 설정의 평균값(기초 마진 설정 기준)</span></span></p>
                     <h3 id="kpiASP" class="text-xl font-extrabold text-slate-900">₩0</h3>
                     <p class="text-xs text-slate-400 font-medium mt-1">기초 마진 설정 기준</p>
                 </div>
 
                 <!-- 5. Net Margin -->
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-visible">
                     <div class="absolute top-0 right-0 w-2 h-full bg-blue-500"></div>
-                    <p class="text-xs font-semibold text-slate-500 mb-1">순마진액</p>
+                    <p class="text-xs font-semibold text-slate-500 mb-1"><span class="formula-tooltip-wrap formula-help-left"><span>순마진액</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: 평균 판매가 (ASP) × 순마진율 ÷ 100</span></span></p>
                     <h3 id="kpiNetMargin" class="text-xl font-extrabold text-blue-700">₩0</h3>
                     <p id="kpiNetMarginSub" class="text-xs text-blue-600 font-semibold mt-1">마진율 0.00%</p>
                 </div>
 
                 <!-- 7. Orders -->
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-visible">
                     <div class="absolute top-0 right-0 w-2 h-full bg-amber-500"></div>
-                    <p class="text-xs font-semibold text-slate-500 mb-1">총 전환 주문수</p>
+                    <p class="text-xs font-semibold text-slate-500 mb-1"><span class="formula-tooltip-wrap formula-help-left"><span>총 전환 주문수</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: 선택된 기여기간의 총 주문수 합계</span></span></p>
                     <h3 id="kpiOrders" class="text-xl font-extrabold text-slate-900">0건 <span id="kpiOrdersRate" class="text-xs font-semibold text-blue-600">(0.00%)</span></h3>
                     <p id="kpiOrdersSub" class="text-xs text-slate-500 font-medium mt-1">직접: 0건 | 간접: 0건</p>
                 </div>
 
                 <!-- 8. CPA -->
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-visible">
                     <div class="absolute top-0 right-0 w-2 h-full bg-orange-500"></div>
-                    <p class="text-xs font-semibold text-slate-500 mb-1">주문당 획득비용 (CPA)</p>
+                    <p class="text-xs font-semibold text-slate-500 mb-1"><span class="formula-tooltip-wrap formula-help-left"><span>주문당 획득비용 (CPA)</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: 총 소진 광고비 / 총 전환 주문수</span></span></p>
                     <h3 id="kpiCPA" class="text-xl font-extrabold text-slate-900">₩0</h3>
                     <p class="text-xs text-slate-400 font-medium mt-1">광고비 / 총주문수</p>
                 </div>
 
                 <!-- 9. Impressions -->
                 <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                    <p class="text-xs font-semibold text-slate-500 mb-1">총 노출수</p>
+                    <p class="text-xs font-semibold text-slate-500 mb-1"><span class="formula-tooltip-wrap formula-help-left"><span>총 노출수</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">정의: 광고가 검색/지면에 노출된 횟수의 합계</span></span></p>
                     <h3 id="kpiImpressions" class="text-lg font-bold text-slate-800">0</h3>
                     <p class="text-xs text-slate-400 mt-1">지면 노출 총합</p>
                 </div>
 
                 <!-- 10. Clicks & CTR -->
                 <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                    <p class="text-xs font-semibold text-slate-500 mb-1">총 클릭수 (CTR)</p>
+                    <p class="text-xs font-semibold text-slate-500 mb-1"><span class="formula-tooltip-wrap formula-help-left"><span>총 클릭수 (CTR)</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: CTR = (총 클릭수 / 총 노출수) × 100</span></span></p>
                     <h3 id="kpiClicksCTR" class="text-lg font-bold text-slate-800">0회 <span class="text-xs font-normal text-blue-600">(0.00%)</span></h3>
                     <p class="text-xs text-slate-400 mt-1">클릭률 중심 평가</p>
                 </div>
 
                 <!-- 11. CPC -->
                 <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                    <p class="text-xs font-semibold text-slate-500 mb-1">평균 클릭당비용 (CPC)</p>
+                    <p class="text-xs font-semibold text-slate-500 mb-1"><span class="formula-tooltip-wrap formula-help-left"><span>평균 클릭당비용 (CPC)</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: 총 소진 광고비 / 총 클릭수</span></span></p>
                     <h3 id="kpiCPC" class="text-lg font-bold text-slate-800">₩0</h3>
                     <p class="text-xs text-slate-400 mt-1">광고비 / 클릭수</p>
                 </div>
@@ -584,7 +642,7 @@
 
             <!-- Keyword efficiency overview: always calculated on Excel upload -->
             <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dashboard-panel panel-tall" onclick="if(event.target.closest('button,a,input,select,textarea')) return; openExpandModal('roas')">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dashboard-panel panel-tall">
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="font-bold text-slate-800 text-sm flex items-center space-x-2">
                             <i class="fa-solid fa-trophy text-amber-500"></i><span>🏆 고효율(TOP ROAS) 키워드 랭킹</span>
@@ -594,14 +652,14 @@
                     <div class="overflow-y-auto max-h-[310px] custom-scrollbar border border-slate-100 rounded-lg">
                         <table class="w-full text-xs text-left text-slate-700 whitespace-nowrap">
                             <thead class="bg-amber-50 text-amber-900 font-bold sticky top-0 border-b border-amber-100">
-                                <tr><th class="p-2.5">순위</th><th class="p-2.5">키워드</th><th class="p-2.5 text-right">소진 광고비</th><th class="p-2.5 text-right">전환매출액</th><th class="p-2.5 text-right">ROAS</th><th class="p-2.5 text-right">전환 주문수</th></tr>
+                                <tr><th class="p-2.5">순위</th><th class="p-2.5">키워드</th><th class="p-2.5 text-right"><span class="formula-tooltip-wrap"><span>소진 광고비</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: 키워드에 사용된 총 비용</span></span></th><th class="p-2.5 text-right"><span class="formula-tooltip-wrap"><span>전환매출액</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: 광고를 통한 최종 매출액</span></span></th><th class="p-2.5 text-right"><span class="formula-tooltip-wrap"><span>ROAS</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: (전환매출액 / 소진 광고비) × 100</span></span></th><th class="p-2.5 text-right"><span class="formula-tooltip-wrap"><span>전환 주문수</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">정의: 키워드에서 발생한 총 전환 주문수</span></span></th></tr>
                             </thead>
                             <tbody id="overviewTopRoasTableBody" class="divide-y divide-slate-100"></tbody>
                         </table>
                     </div>
                 </div>
 
-                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dashboard-panel panel-tall" onclick="if(event.target.closest('button,a,input,select,textarea')) return; openExpandModal('chart')">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dashboard-panel panel-tall">
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="font-bold text-slate-800 text-sm">최대 소진 키워드 TOP 10 성과</h3>
                         <button onclick="event.stopPropagation(); openExpandModal('chart')" class="text-slate-400 hover:text-blue-600 transition bg-slate-100 hover:bg-blue-50 px-2 py-1 rounded text-xs font-semibold"><i class="fa-solid fa-expand mr-1"></i>크게 보기</button>
@@ -616,13 +674,13 @@
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm lg:col-span-1 flex flex-col">
                     <h3 class="font-bold text-slate-800 text-sm mb-4 flex items-center space-x-2">
                         <i class="fa-solid fa-filter-circle-dollar text-blue-600"></i>
-                        <span>마케팅 퍼널(Funnel) 단계별 전환율</span>
+                        <span class="formula-tooltip-wrap formula-help-left"><span>마케팅 퍼널(Funnel) 단계별 전환율</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">CTR = 클릭수 / 노출수 × 100 · CVR = 전환 주문수 / 클릭수 × 100 · ROAS = 전환 매출액 / 광고비 × 100</span></span>
                     </h3>
                     <div class="space-y-4 flex-1 flex flex-col justify-center">
                         <!-- Funnel 1: Impressions -->
                         <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
                             <div class="flex justify-between text-xs font-semibold mb-1">
-                                <span class="text-slate-600">1단계. 광고 노출</span>
+                                <span class="formula-tooltip-wrap formula-help-left"><span class="text-slate-600">1단계. 광고 노출</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">정의: 광고가 사용자에게 노출된 횟수</span></span>
                                 <span id="fnlImp" class="text-slate-900">0회</span>
                             </div>
                             <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
@@ -633,7 +691,7 @@
                         <!-- Funnel 2: Clicks -->
                         <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
                             <div class="flex justify-between text-xs font-semibold mb-1">
-                                <span class="text-slate-600">2단계. 상품 클릭 (CTR)</span>
+                                <span class="formula-tooltip-wrap formula-help-left"><span class="text-slate-600">2단계. 상품 클릭 (CTR)</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: CTR = (클릭수 / 노출수) × 100</span></span>
                                 <span id="fnlClick" class="text-blue-600">0회 (0.00%)</span>
                             </div>
                             <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
@@ -644,7 +702,7 @@
                         <!-- Funnel 3: Orders -->
                         <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
                             <div class="flex justify-between text-xs font-semibold mb-1">
-                                <span class="text-slate-600">3단계. 전환 주문 (CVR)</span>
+                                <span class="formula-tooltip-wrap formula-help-left"><span class="text-slate-600">3단계. 전환 주문 (CVR)</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: CVR = (전환 주문수 / 클릭수) × 100</span></span>
                                 <span id="fnlOrder" class="text-emerald-600">0건 (0.00%)</span>
                             </div>
                             <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
@@ -655,7 +713,7 @@
                         <!-- Funnel 4: Revenue -->
                         <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
                             <div class="flex justify-between text-xs font-semibold mb-1">
-                                <span class="text-slate-600">4단계. 총 전환 매출 (ROAS)</span>
+                                <span class="formula-tooltip-wrap formula-help-left"><span class="text-slate-600">4단계. 총 전환 매출 (ROAS)</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: ROAS = (총 전환 매출액 / 총 소진 광고비) × 100</span></span>
                                 <span id="fnlRev" class="text-purple-600">₩0 (0.00%)</span>
                             </div>
                             <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
@@ -669,7 +727,7 @@
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm lg:col-span-1 flex flex-col">
                     <h3 class="font-bold text-slate-800 text-sm mb-2 flex items-center space-x-2">
                         <i class="fa-solid fa-chart-pie text-indigo-600"></i>
-                        <span>광고 노출 지면별 매출 비중</span>
+                        <span class="formula-tooltip-wrap formula-help-left"><span>광고 노출 지면별 매출 비중</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: 해당 지면 전환 매출액 / 전체 지면 전환 매출액 × 100</span></span>
                     </h3>
                     <div class="flex-1 relative flex items-center justify-center p-2" style="min-height: 240px;">
                         <canvas id="chartPlacementRev"></canvas>
@@ -680,7 +738,7 @@
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm lg:col-span-1 flex flex-col">
                     <h3 class="font-bold text-slate-800 text-sm mb-2 flex items-center space-x-2">
                         <i class="fa-solid fa-bullseye text-emerald-600"></i>
-                        <span>직접 전환 vs 간접 전환 구조</span>
+                        <span class="formula-tooltip-wrap formula-help-left"><span>직접 전환 vs 간접 전환 구조</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">정의: 직접 전환 매출과 간접 전환 매출의 구성 비교</span></span>
                     </h3>
                     <div class="flex-1 relative flex items-center justify-center p-2" style="min-height: 240px;">
                         <canvas id="chartDirectIndirect"></canvas>
@@ -701,14 +759,14 @@
                         <thead class="bg-slate-100 text-slate-800 font-bold border-b border-slate-200">
                             <tr>
                                 <th class="p-3">노출 지면 구분</th>
-                                <th class="p-3 text-right">노출수</th>
-                                <th class="p-3 text-right">클릭수</th>
-                                <th class="p-3 text-right">클릭률(CTR)</th>
-                                <th class="p-3 text-right">광고비</th>
-                                <th class="p-3 text-right">평균 CPC</th>
-                                <th class="p-3 text-right">주문수</th>
-                                <th class="p-3 text-right">전환 매출액</th>
-                                <th class="p-3 text-right">ROAS</th>
+                                <th class="p-3 text-right"><span class="formula-tooltip-wrap"><span>노출수</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">정의: 광고가 검색 및 지면에 노출된 횟수</span></span></th>
+                                <th class="p-3 text-right"><span class="formula-tooltip-wrap"><span>클릭수</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">정의: 사용자가 광고를 실제로 클릭한 횟수</span></span></th>
+                                <th class="p-3 text-right"><span class="formula-tooltip-wrap"><span>클릭률(CTR)</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: (클릭수 / 노출수) × 100</span></span></th>
+                                <th class="p-3 text-right"><span class="formula-tooltip-wrap"><span>광고비</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">정의: 해당 지면에서 발생한 광고비 합계</span></span></th>
+                                <th class="p-3 text-right"><span class="formula-tooltip-wrap"><span>평균 CPC</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: 광고비 / 클릭수</span></span></th>
+                                <th class="p-3 text-right"><span class="formula-tooltip-wrap"><span>주문수</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">정의: 해당 지면에서 발생한 전환 주문수</span></span></th>
+                                <th class="p-3 text-right"><span class="formula-tooltip-wrap"><span>전환 매출액</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">정의: 해당 지면의 총 전환 매출액</span></span></th>
+                                <th class="p-3 text-right"><span class="formula-tooltip-wrap"><span>ROAS</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: (전환 매출액 / 광고비) × 100</span></span></th>
                             </tr>
                         </thead>
                         <tbody id="placementTableBody" class="divide-y divide-slate-100">
@@ -720,14 +778,14 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="font-bold text-slate-800 text-sm mb-3">지면별 광고비 vs 전환 매출액</h3>
+                    <h3 class="font-bold text-slate-800 text-sm mb-3"><span class="formula-tooltip-wrap formula-help-left"><span>지면별 광고비 vs 전환 매출액</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">비교 기준: 지면별 소진 광고비와 전환 매출액</span></span></h3>
                     <div class="h-64">
                         <canvas id="chartPlacementSpendRev"></canvas>
                     </div>
                 </div>
 
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="font-bold text-slate-800 text-sm mb-3">지면별 CTR (%) vs 평균 CPC (원)</h3>
+                    <h3 class="font-bold text-slate-800 text-sm mb-3"><span class="formula-tooltip-wrap formula-help-left"><span>지면별 CTR (%) vs 평균 CPC (원)</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">CTR = (클릭수 / 노출수) × 100 · CPC = 광고비 / 클릭수</span></span></h3>
                     <div class="h-64">
                         <canvas id="chartPlacementCtrCpc"></canvas>
                     </div>
@@ -739,12 +797,12 @@
         <!-- TAB 3: KEYWORD & WASTE SPEND ANALYSIS -->
         <div id="tab3" class="tab-content hidden space-y-6">
             <!-- Alert Banner for Waste Spend -->
-            <div class="bg-rose-50 border-l-4 border-rose-500 p-4 rounded-xl shadow-sm flex items-start space-x-3 cursor-pointer hover:shadow-md transition" onclick="openExpandModal('waste')">
+            <div class="bg-rose-50 border-l-4 border-rose-500 p-4 rounded-xl shadow-sm flex items-start space-x-3 cursor-pointer hover:shadow-md transition">
                 <div class="text-rose-500 text-xl mt-0.5"><i class="fa-solid fa-triangle-exclamation"></i></div>
                 <div class="flex-1">
                     <h4 class="font-bold text-rose-800 text-sm flex items-center justify-between">
                         <span>광고비 예산 누수(Waste Spend) 경고 탐지</span>
-                        <span class="text-rose-400 text-xs font-normal bg-rose-100 px-2 py-0.5 rounded-full"><i class="fa-solid fa-expand mr-1"></i>클릭하여 전체보기</span>
+                        <span class="text-rose-500 text-xs font-semibold bg-rose-100 px-2 py-0.5 rounded-full">주의</span>
                     </h4>
                     <p class="text-xs text-rose-700 mt-1">
                         클릭 및 광고비는 발생했으나 **전환 매출이 0원**인 비효율 키워드가 <span id="wasteCount" class="font-bold">0개</span> 감지되었습니다. 
@@ -765,26 +823,37 @@
                     <!-- 1. 기초 마진 설정 -->
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col" data-no-expand="true">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="font-bold text-slate-800 text-sm">1. 기초 마진 설정</h3>
-                            <span class="text-[10px] font-semibold text-slate-400">설정 저장</span>
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-sm"><span class="formula-tooltip-wrap formula-help-left"><span>1. 기초 마진 설정</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">SKU별 판매가·순마진율·목표 수익 확보율을 저장하고, 이를 기준으로 순마진액·BEP ROAS·최대 CPA를 계산합니다.</span></span></h3>
+                                <p class="text-[10px] text-slate-400 mt-0.5">SKU별 판매가 · 순마진율 · 목표 수익 확보율을 별도로 저장합니다.</p>
+                            </div>
+                            <span id="marginSkuSettingBadge" class="text-[10px] font-semibold px-2 py-1 rounded-md bg-slate-100 text-slate-500">SKU별 설정</span>
                         </div>
                         <div class="space-y-3">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">평균 판매가 (ASP) ₩</label>
-                                <input type="number" id="inputAsp" value="17900" oninput="calculateCoreKeywords()" class="w-full bg-white border border-slate-300 rounded-md p-2 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+                            <div class="bg-blue-50/70 border border-blue-100 rounded-lg p-3">
+                                <label class="block text-xs font-bold text-blue-900 mb-1">설정 대상 SKU</label>
+                                <select id="marginSkuSelect" onchange="loadSkuMarginSettings(this.value)" class="w-full bg-white border border-blue-200 rounded-md p-2 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <option value="">SKU를 선택해주세요.</option>
+                                </select>
+                                <p id="marginSkuSettingStatus" class="text-[10px] text-slate-500 mt-1.5 leading-4">상품별 저장값이 각 데이터 행에 자동 적용됩니다.</p>
+                                <button type="button" onclick="document.getElementById('skuMarginSettingsPanel')?.scrollIntoView({behavior:'smooth',block:'start'})" class="mt-2 text-[10px] font-bold text-blue-600 hover:text-blue-800"><i class="fa-solid fa-table-list mr-1"></i>SKU 설정 한눈에 보기 · 일괄 편집</button>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">순마진율 (%)</label>
-                                <input type="number" id="inputNetMargin" value="25" oninput="calculateCoreKeywords()" class="w-full bg-white border border-slate-300 rounded-md p-2 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1"><span class="formula-tooltip-wrap formula-help-left"><span>평균 판매가 (ASP) ₩</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: 선택한 SKU의 판매가 설정값</span></span></label>
+                                <input type="number" id="inputAsp" value="17900" min="0" oninput="handleMarginInputChange()" class="w-full bg-white border border-slate-300 rounded-md p-2 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">목표 수익 확보율 (%) (실전 입찰용)</label>
-                                <input type="number" id="inputTargetProfit" value="80" oninput="calculateCoreKeywords()" class="w-full bg-white border border-slate-300 rounded-md p-2 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1"><span class="formula-tooltip-wrap formula-help-left"><span>순마진율 (%)</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">정의: 판매가에서 원가·기타 비용 등을 제외한 순마진의 비율</span></span></label>
+                                <input type="number" id="inputNetMargin" value="25" min="0" max="100" step="0.01" oninput="handleMarginInputChange()" class="w-full bg-white border border-slate-300 rounded-md p-2 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1"><span class="formula-tooltip-wrap formula-help-left"><span>목표 수익 확보율 (%) (실전 입찰용)</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: 목표 수익 확보액 = 순마진액 × 목표 수익 확보율</span></span></label>
+                                <input type="number" id="inputTargetProfit" value="80" min="0" max="100" step="0.01" oninput="handleMarginInputChange()" class="w-full bg-white border border-slate-300 rounded-md p-2 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
                             </div>
                             
                             <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 mt-2 space-y-1.5">
-                                <div class="text-xs font-bold text-blue-600 flex items-center"><i class="fa-solid fa-arrow-turn-up fa-rotate-90 mr-1.5"></i>순마진액: <span id="calcNetMarginAmt" class="ml-1">4,475</span>원</div>
-                                <div class="text-xs font-bold text-emerald-600 flex items-center"><i class="fa-solid fa-arrow-turn-up fa-rotate-90 mr-1.5"></i>목표 수익 확보액: <span id="calcTargetProfitAmt" class="ml-1">3,580</span>원</div>
+                                <div class="text-xs font-bold text-blue-600 flex items-center"><span class="formula-tooltip-wrap formula-help-left"><span><i class="fa-solid fa-arrow-turn-up fa-rotate-90 mr-1.5"></i>순마진액</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-blue-400"></i><span class="formula-tooltip">수식: 판매가 (ASP) × 순마진율</span></span>: <span id="calcNetMarginAmt" class="ml-1">4,475</span>원</div>
+                                <div class="text-xs font-bold text-emerald-600 flex items-center"><span class="formula-tooltip-wrap formula-help-left"><span><i class="fa-solid fa-arrow-turn-up fa-rotate-90 mr-1.5"></i>목표 수익 확보액</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-emerald-400"></i><span class="formula-tooltip">수식: 순마진액 × 목표 수익 확보율</span></span>: <span id="calcTargetProfitAmt" class="ml-1">3,580</span>원</div>
                                 <div class="text-xs font-bold text-violet-600 flex items-center">
                                     <i class="fa-solid fa-scale-balanced mr-1.5"></i>
                                     <span class="formula-tooltip-wrap justify-start">
@@ -794,10 +863,18 @@
                                     </span>
                                 </div>
                             </div>
+                            <div class="grid grid-cols-1 gap-2 mt-3 pt-3 border-t border-slate-100">
+                                <button type="button" onclick="saveCurrentSkuMarginSetting()" class="w-full px-3 py-2 rounded-md bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition"><i class="fa-solid fa-floppy-disk mr-1.5"></i>현재 SKU에 설정 저장</button>
+                                <button type="button" onclick="applyInputsToUnconfiguredSkus()" class="w-full px-3 py-2 rounded-md bg-slate-100 text-slate-700 text-xs font-bold hover:bg-blue-50 hover:text-blue-700 transition"><i class="fa-solid fa-copy mr-1.5"></i>미설정 SKU에 현재값 일괄 적용</button>
+                            </div>
                             <div class="mt-3 pt-3 border-t border-slate-100">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">공통 설정 템플릿</span>
+                                    <span class="text-[10px] text-slate-400">필요한 경우 SKU에 불러와 저장</span>
+                                </div>
                                 <div class="flex gap-2">
                                     <input id="marginProfileName" type="text" placeholder="저장할 설정명" class="min-w-0 flex-1 bg-white border border-slate-300 rounded-md px-2.5 py-2 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                    <button type="button" onclick="saveMarginProfile()" class="shrink-0 px-3 py-2 rounded-md bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700">저장</button>
+                                    <button type="button" onclick="saveMarginProfile()" class="shrink-0 px-3 py-2 rounded-md bg-slate-700 text-white text-xs font-bold hover:bg-slate-800">저장</button>
                                 </div>
                                 <div class="flex gap-2 mt-2">
                                     <select id="marginProfileSelect" onchange="loadMarginProfile(this.value)" class="min-w-0 flex-1 bg-slate-50 border border-slate-300 rounded-md px-2 py-2 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
@@ -811,20 +888,21 @@
 
                     <!-- 2. 핵심 키워드 발굴 조건 -->
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col border-t-4 border-t-blue-500" data-no-expand="true">
-                        <h3 class="font-bold text-slate-800 text-sm mb-4">2. 핵심 키워드 조건 (필터)</h3>
+                        <h3 class="font-bold text-slate-800 text-sm mb-4"><span class="formula-tooltip-wrap formula-help-left"><span>2. 핵심 키워드 조건 (필터)</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">클릭·전환·수익성 기준을 충족하는 키워드만 최종 핵심 키워드에 포함합니다. 최대 CPA는 SKU별 저장 마진 설정에서 자동 계산됩니다.</span></span></h3>
                         <div class="space-y-3">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">[규모/관심] 최소 클릭수 이상</label>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1"><span class="formula-tooltip-wrap formula-help-left"><span>[규모/관심] 최소 클릭수 이상</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">정의: 핵심 키워드로 포함하기 위한 최소 클릭수 기준</span></span></label>
                                 <input type="number" id="inputMinClick" value="5" min="0" oninput="calculateCoreKeywords()" class="w-full bg-white border border-slate-300 rounded-md p-2 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-blue-500 transition">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">[전환력] 최소 전환 주문수</label>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1"><span class="formula-tooltip-wrap formula-help-left"><span>[전환력] 최소 전환 주문수</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">정의: 핵심 키워드로 포함하기 위한 최소 전환 주문수 기준</span></span></label>
                                 <input type="number" id="inputMinOrder" value="3" min="0" oninput="calculateCoreKeywords()" class="w-full bg-white border border-slate-300 rounded-md p-2 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-blue-500 transition">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">[수익성] 최대 CPA</label>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1"><span class="formula-tooltip-wrap formula-help-left"><span>[수익성] 최대 CPA</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">수식: 순마진액 × (1 - 목표 수익 확보율)</span></span></label>
                                 <input type="number" id="inputMaxCpa" value="895" readonly class="w-full bg-slate-100 border border-slate-300 rounded-md p-2 text-sm font-bold text-emerald-700 cursor-not-allowed">
-                                <p class="text-[11px] text-slate-400 mt-1">목표 수익 확보액을 제외하고 광고비로 사용할 수 있는 주문당 최대 금액</p>
+                                <p id="maxCpaHelpText" class="text-[11px] text-slate-400 mt-1">현재 선택된 SKU의 목표 수익 확보액을 제외하고 광고비로 사용할 수 있는 주문당 최대 금액</p>
+                                <p class="text-[10px] text-blue-500 mt-1">여러 상품을 선택하면 핵심 키워드별로 각 SKU의 저장값이 개별 적용됩니다.</p>
                             </div>
                             <div class="mt-3 pt-3 border-t border-slate-100">
                                 <div class="flex gap-2">
@@ -842,20 +920,22 @@
                     </div>
                 </div>
 
-                <!-- Core Keywords Table (Expandable) -->
-                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col xl:col-span-3 relative group cursor-pointer hover:border-blue-400 transition-all" onclick="if(event.target.closest('button')) return; openExpandModal('core')">
+                <!-- Core Keywords + SKU Profitability: independent right-column flow to avoid stretched blank space -->
+                <div class="xl:col-span-3 min-w-0 flex flex-col space-y-4 items-stretch">
+                <!-- Core Keywords Table -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col w-full min-w-0">
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="font-bold text-slate-800 text-sm flex items-center space-x-2">
                             <i class="fa-solid fa-key text-emerald-500"></i>
                             <span>최종 핵심 키워드 (마진 보전율 TOP)</span>
                         </h3>
-                        <button onclick="event.stopPropagation(); openExpandModal('core')" class="text-slate-400 hover:text-blue-600 transition bg-slate-100 hover:bg-blue-50 px-2 py-1 rounded text-xs font-semibold flex items-center"><i class="fa-solid fa-expand mr-1.5"></i>전체 화면</button>
                     </div>
                     <div class="overflow-y-auto max-h-[500px] custom-scrollbar border border-slate-100 rounded-lg bg-slate-50 relative z-10" onclick="event.stopPropagation()">
                         <table class="w-full formula-table text-xs text-left text-slate-700 whitespace-nowrap">
                             <thead class="bg-emerald-50 text-emerald-900 font-bold sticky top-0 border-b border-emerald-100 z-50">
                         <tr class="formula-group-row">
-                            <th rowspan="2" class="p-2.5 formula-keyword-head text-left">키워드</th>
+                            <th rowspan="2" class="p-2.5 formula-keyword-head text-left"><span class="formula-tooltip-wrap formula-help-left"><span>키워드</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">정의: 광고에 실제 집행된 검색/타겟 키워드</span></span></th>
+                            <th rowspan="2" class="p-2.5 formula-keyword-head text-left core-sku-cell"><span class="formula-tooltip-wrap formula-help-left"><span>SKU</span><i class="fa-solid fa-circle-question formula-tooltip-trigger text-[10px] text-slate-400"></i><span class="formula-tooltip">정의: 해당 키워드가 광고 집행된 상품을 제품명 핵심 + 내용량 기준으로 표시한 SKU 식별명</span></span></th>
                             <th colspan="3" class="formula-group-traffic">1. 유입력 (Traffic)</th>
                             <th colspan="2" class="formula-group-conversion">2. 전환력 (Conversion)</th>
                             <th colspan="3" class="formula-group-scale">3. 거래 규모 (Scale)</th>
@@ -874,11 +954,65 @@
                         </table>
                     </div>
                 </div>
-            </div>
 
-                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <!-- EMBEDDED SKU PROFITABILITY SETTINGS: TAB 3 -->
+                    <section id="skuMarginSettingsPanel" class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm w-full min-w-0" data-no-expand="true" onclick="event.stopPropagation()">
+                            <div class="sku-margin-toolbar mb-4">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-sliders text-blue-600"></i>
+                                        <h3 class="font-bold text-slate-800 text-base">SKU별 수익성 설정</h3>
+                                    </div>
+                                    <p class="text-xs text-slate-500 mt-1.5">최종 핵심 키워드 바로 아래에서 SKU별 판매가, 순마진율, 목표 수익 확보율을 한눈에 확인하고 일괄 수정합니다. 저장 후 03 키워드 & 예산 누수와 06 데이터 탐색기의 수익성 지표에 즉시 반영됩니다.</p>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <button type="button" onclick="syncSkuMarginMappingsFromNamedProfiles(); renderSkuMarginSettings()" class="px-3 py-2 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold hover:bg-slate-200"><i class="fa-solid fa-rotate mr-1.5"></i>기존 템플릿 동기화</button>
+                                    <button type="button" onclick="applyCurrentSkuValueToAllBulkRows()" class="px-3 py-2 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold hover:bg-blue-50 hover:text-blue-700"><i class="fa-solid fa-copy mr-1.5"></i>현재 03번 설정값 전체 적용</button>
+                                    <button type="button" onclick="saveAllSkuMarginSettings()" class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 shadow-sm"><i class="fa-solid fa-floppy-disk mr-1.5"></i>변경값 전체 저장</button>
+                                </div>
+                            </div>
+            
+                            <div class="sku-margin-summary-grid mb-4">
+                                <div class="keyword-manage-summary"><div class="text-[11px] text-slate-500 font-semibold">현재 데이터 SKU</div><div id="skuMarginTotalCount" class="text-xl font-extrabold text-slate-900 mt-1">0개</div></div>
+                                <div class="keyword-manage-summary border-emerald-100 bg-emerald-50/40"><div class="text-[11px] text-emerald-600 font-semibold">설정 완료</div><div id="skuMarginConfiguredCount" class="text-xl font-extrabold text-emerald-700 mt-1">0개</div></div>
+                                <div class="keyword-manage-summary border-amber-100 bg-amber-50/40"><div class="text-[11px] text-amber-600 font-semibold">미저장 변경</div><div id="skuMarginUnsavedCount" class="text-xl font-extrabold text-amber-700 mt-1">0개</div></div>
+                                <div class="keyword-manage-summary border-violet-100 bg-violet-50/40"><div class="text-[11px] text-violet-600 font-semibold">설정된 SKU 평균 순마진율</div><div id="skuMarginAverageRate" class="text-xl font-extrabold text-violet-700 mt-1">0.00%</div></div>
+                            </div>
+            
+                            <div class="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between mb-3">
+                                <div class="relative w-full md:w-96">
+                                    <input id="skuMarginSearch" oninput="renderSkuMarginSettings()" type="text" placeholder="상품명 또는 옵션ID로 검색" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 pl-9 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400"></i>
+                                </div>
+                                <div class="text-[11px] text-slate-500">입력값은 행별로 수정하고 마지막에 <b class="text-emerald-700">변경값 전체 저장</b>으로 한 번에 저장할 수 있습니다.</div>
+                            </div>
+            
+                            <div class="overflow-x-auto border border-slate-200 rounded-lg max-h-[500px] custom-scrollbar">
+                                <table class="w-full text-xs text-left text-slate-700 whitespace-nowrap sku-margin-table">
+                                    <thead class="bg-slate-50 text-slate-700 font-bold sticky top-0 z-20 border-b border-slate-200">
+                                        <tr>
+                                            <th class="p-3 text-center w-14">상태</th>
+                                            <th class="p-3 text-left" style="width:330px">집행 상품</th>
+                                            <th class="p-3 text-center" style="width:150px">옵션ID (SKU)</th>
+                                            <th class="p-3 text-right" style="width:160px">판매가 (ASP)</th>
+                                            <th class="p-3 text-right" style="width:150px">순마진율 (%)</th>
+                                            <th class="p-3 text-right" style="width:160px">목표 수익 확보율 (%)</th>
+                                            <th class="p-3 text-right" style="width:150px">순마진액</th>
+                                            <th class="p-3 text-right" style="width:160px">목표 수익 확보액</th>
+                                            <th class="p-3 text-right" style="width:150px">BEP ROAS (%)</th>
+                                            <th class="p-3 text-right" style="width:150px">최대 CPA</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="skuMarginSettingsBody" class="divide-y divide-slate-100"></tbody>
+                                </table>
+                            </div>
+                    </section>
+                </div>
+                </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 <!-- Waste Keywords Table -->
-                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col cursor-pointer hover:border-rose-300 transition-all group" onclick="if(event.target.closest('button')) return; openExpandModal('waste')">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col transition-all group">
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center space-x-2">
                             <h3 class="font-bold text-slate-800 text-sm flex items-center space-x-2">
@@ -908,7 +1042,7 @@
                 </div>
 
                 <!-- Top ROAS Keywords Table -->
-                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col cursor-pointer hover:border-amber-300 transition-all group" onclick="if(event.target.closest('button')) return; openExpandModal('roas')">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col transition-all group">
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center space-x-2">
                             <h3 class="font-bold text-slate-800 text-sm flex items-center space-x-2">
@@ -941,7 +1075,7 @@
 
         <!-- TAB 4: PRODUCT & CROSS-SELLING ANALYSIS -->
         <div id="tab4" class="tab-content hidden space-y-6">
-            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dashboard-panel panel-tall" onclick="if(event.target.closest('button,a,input,select,textarea')) return; openExpandModal('productDirect')">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dashboard-panel panel-tall">
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
                     <div>
                         <h3 class="font-bold text-slate-800 text-sm flex items-center space-x-2"><i class="fa-solid fa-box-open text-blue-600"></i><span>광고 집행 상품별 직접 전환 VS 간접 전환(후광 효과) 분석</span></h3>
@@ -959,20 +1093,20 @@
             </div>
 
             <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full min-w-0 items-stretch">
-                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dashboard-panel panel-chart-tall h-full" onclick="if(event.target.closest('button,a,input,select,textarea')) return; openExpandModal('productMix')">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dashboard-panel panel-chart-tall h-full">
                     <h3 class="font-bold text-slate-800 text-sm mb-2">광고 전환 매출 구성 비중</h3><p id="productMixSummary" class="text-[11px] text-slate-500 mb-2"></p><div class="h-80"><canvas id="chartProductRevenueMix"></canvas></div>
                 </div>
-                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dashboard-panel panel-chart-tall h-full" onclick="if(event.target.closest('button,a,input,select,textarea')) return; openExpandModal('productRevenue')">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dashboard-panel panel-chart-tall h-full">
                     <h3 class="font-bold text-slate-800 text-sm mb-2">광고집행 상품별 전환 매출 구성</h3><p class="text-[11px] text-slate-500 mb-2">첨부 레퍼런스처럼 상품별 직접/간접 전환을 가로 누적 막대로 표시하고, 각 막대에 금액과 비중을 함께 표기합니다.</p><div class="h-80"><canvas id="chartProductRevenue"></canvas></div>
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dashboard-panel panel-tall" onclick="if(event.target.closest('button,a,input,select,textarea')) return; openExpandModal('productMatrix')">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dashboard-panel panel-tall">
                 <div class="flex items-center justify-between mb-3"><div><h3 class="font-bold text-slate-800 text-sm">교차 매출 매트릭스</h3><p class="text-[11px] text-slate-500 mt-1">행 = 광고집행 상품, 열 = 실제 전환 발생 상품. 값은 선택된 기여기간의 전환 매출액입니다.</p></div><span id="productMatrixBadge" class="text-[11px] font-semibold px-2 py-1 rounded-md bg-slate-100 text-slate-600"></span></div>
                 <div class="overflow-auto max-h-[520px] border border-slate-100 rounded-lg"><table id="productCrossMatrix" class="w-full text-[11px] whitespace-nowrap"></table></div>
             </div>
 
-            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dashboard-panel panel-tall" onclick="if(event.target.closest('button,a,input,select,textarea')) return; openExpandModal('productInsight')">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dashboard-panel panel-tall">
                 <div class="flex items-center justify-between mb-3"><div><h3 class="font-bold text-slate-800 text-sm flex items-center space-x-2"><i class="fa-solid fa-magnifying-glass-chart text-amber-500"></i><span>주요 현상 자동 분석</span></h3><p class="text-[11px] text-slate-500 mt-1">실제 광고집행 상품 → 전환 발생 상품 데이터를 매칭해 업셀링, 대량 다운셀링, 타브랜드 후광, 균형형 케이스를 탐지합니다.</p></div><span id="productInsightPeriod" class="text-[11px] px-2 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-100"></span></div>
                 <div id="productInsightCards" class="grid grid-cols-1 xl:grid-cols-4 gap-4"></div>
             </div>
@@ -981,7 +1115,7 @@
         <!-- TAB 5: ATTRIBUTION & CONVERSION STRUCTURE -->
         <div id="tab5" class="tab-content hidden space-y-6">
             <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch">
-            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dashboard-panel panel-tall h-full" onclick="if(event.target.closest('button,a,input,select,textarea')) return; openExpandModal('attrLag')">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dashboard-panel panel-tall h-full">
                 <div>
                     <h3 class="font-bold text-slate-800 text-sm mb-1 flex items-center space-x-2"><i class="fa-solid fa-clock text-blue-600"></i><span>구매 시차 분석 (1일 기여 vs 14일 기여)</span></h3>
                     <p class="text-xs text-slate-500 mb-4">광고 클릭 후 즉시 구매(1일)와 숙고 후 구매(14일)의 매출 성숙도 차이</p>
@@ -992,7 +1126,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dashboard-panel panel-chart-tall h-full" onclick="if(event.target.closest('button,a,input,select,textarea')) return; openExpandModal('attrChart')">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dashboard-panel panel-chart-tall h-full">
                 <h3 class="font-bold text-slate-800 text-sm mb-3">1일 vs 14일 기여 매출 비교</h3><div class="h-80"><canvas id="chartAttributionComp"></canvas></div>
             </div>
             </div>
@@ -1000,7 +1134,7 @@
 
         <!-- TAB 6: DATA EXPLORER & RAW TABLE -->
         <div id="tab6" class="tab-content hidden space-y-4">
-            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dashboard-panel panel-tall" onclick="if(event.target.closest('button,a,input,select,textarea,th')) return; openExpandModal('explorer')">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dashboard-panel panel-tall">
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
                     <div class="flex items-center space-x-2">
                         <i class="fa-solid fa-database text-blue-600"></i>
@@ -1211,6 +1345,183 @@
             </div>
         </div>
 
+
+        <!-- TAB 8: ROCKET GROWTH SALES OPTION ANALYSIS -->
+        <div id="tab8" class="tab-content hidden space-y-6">
+            <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                <div class="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-chart-column text-blue-600"></i>
+                            <h3 class="font-bold text-slate-800 text-base">쿠팡 로켓그로스 판매 옵션 분석</h3>
+                            <span class="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-100 rounded-full px-2 py-0.5">Raw Data 연동</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">첨부된 판매 분석 리포트의 내용을 기반으로, 판매 옵션별 수량·매출·구매 단위·10g당 가격을 한 화면에서 확인합니다. 이 목차의 원본 업로드는 01~07 광고 분석 데이터와 별도로 처리됩니다.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 text-xs">
+                        <label for="salesOptionFileInput" class="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800 font-bold">
+                            <i class="fa-solid fa-file-excel text-emerald-400"></i> Raw Data 엑셀 선택
+                        </label>
+                        <input id="salesOptionFileInput" type="file" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleSalesOptionFileSelect(event)">
+                        <button type="button" onclick="resetSalesOptionData()" class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 font-semibold">
+                            <i class="fa-solid fa-rotate-left mr-1"></i> 샘플 데이터 복원
+                        </button>
+                    </div>
+                </div>
+
+                <div id="salesOptionDropzone" class="sales-option-dropzone rounded-xl mt-4 p-6 text-center cursor-pointer">
+                    <div class="w-11 h-11 mx-auto rounded-xl bg-white border border-slate-200 shadow-sm flex items-center justify-center text-blue-600 mb-2">
+                        <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+                    </div>
+                    <div class="text-sm font-extrabold text-slate-800">Raw Data 엑셀을 이곳에 드래그 & 드롭</div>
+                    <div class="text-xs text-slate-500 mt-1">또는 위의 <b>Raw Data 엑셀 선택</b> 버튼으로 업로드하세요.</div>
+                    <div class="text-[10px] text-slate-400 mt-2 break-words">필수 컬럼: 옵션 ID · 옵션명 · 상품명 · 등록상품ID · 카테고리 · 판매방식 · 매출(원) · 주문 · 판매량 · 방문자 · 조회 · 장바구니 · 구매전환율 · 아이템위너 비율(%) · 총 매출(원) · 총 판매수 · 총 취소 금액(원) · 총 취소된 상품수 · 즉시 취소된 상품수</div>
+                    <div id="salesOptionFileStatus" class="text-[11px] font-semibold text-slate-500 mt-3">현재 샘플 데이터 7개 옵션을 표시하고 있습니다.</div>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm sales-option-kpi">
+                    <div class="text-xs font-semibold text-slate-400">총 판매량</div>
+                    <div id="salesKpiQty" class="text-2xl font-extrabold text-slate-900 mt-2">0</div>
+                    <div class="text-[11px] text-emerald-600 font-semibold mt-1">판매량 기준</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm sales-option-kpi">
+                    <div class="text-xs font-semibold text-slate-400">총 누적 매출액</div>
+                    <div id="salesKpiRevenue" class="text-2xl font-extrabold text-orange-600 mt-2">₩0</div>
+                    <div class="text-[11px] text-slate-500 mt-1">매출(원) 기준</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm sales-option-kpi">
+                    <div class="text-xs font-semibold text-slate-400">건당 평균 판매 단가</div>
+                    <div id="salesKpiAov" class="text-2xl font-extrabold text-blue-600 mt-2">₩0</div>
+                    <div class="text-[11px] text-slate-500 mt-1">매출 ÷ 판매량</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm sales-option-kpi">
+                    <div class="text-xs font-semibold text-slate-400">최다 판매 옵션</div>
+                    <div id="salesKpiTopQty" class="text-lg font-extrabold text-slate-900 mt-2 truncate" title="-">-</div>
+                    <div id="salesKpiTopQtySub" class="text-[11px] text-amber-600 font-semibold mt-1">0개</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm sales-option-kpi col-span-2 lg:col-span-1">
+                    <div class="text-xs font-semibold text-slate-400">최다 매출 옵션</div>
+                    <div id="salesKpiTopRev" class="text-lg font-extrabold text-slate-900 mt-2 truncate" title="-">-</div>
+                    <div id="salesKpiTopRevSub" class="text-[11px] text-emerald-600 font-semibold mt-1">₩0</div>
+                </div>
+            </section>
+
+            <section class="bg-gradient-to-r from-orange-50 via-amber-50 to-blue-50 border border-orange-200/80 rounded-xl p-4 sm:p-5">
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-orange-500 text-white flex items-center justify-center shrink-0 font-bold text-sm">💡</div>
+                    <div class="space-y-1.5 text-xs sm:text-sm text-slate-700 flex-1">
+                        <div class="font-bold text-slate-900 text-base">핵심 판매 진단 요약</div>
+                        <p id="salesInsight1">-</p>
+                        <p id="salesInsight2">-</p>
+                        <p id="salesInsight3">-</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                <div class="lg:col-span-5 bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col sales-option-chart-card">
+                    <div class="flex items-center justify-between gap-3">
+                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="fa-solid fa-chart-pie text-orange-500"></i> SKU 용량별 (100g vs 30g) 점유율</h3>
+                        <span class="text-[10px] text-slate-400 font-medium">판매량 vs 매출</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-1">원본 데이터의 옵션명/옵션 규격에서 내용량을 추출하여 30g·100g 기준으로 합산합니다.</p>
+                    <div class="grid grid-cols-2 gap-3 mt-3 flex-1">
+                        <div class="relative h-56"><canvas id="salesChartVolumeShare"></canvas></div>
+                        <div class="relative h-56"><canvas id="salesChartRevenueShare"></canvas></div>
+                    </div>
+                    <div id="salesWeightSummary" class="grid grid-cols-2 gap-2 text-xs mt-3"></div>
+                </div>
+
+                <div class="lg:col-span-7 bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col sales-option-chart-card">
+                    <div class="flex items-center justify-between gap-3">
+                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="fa-solid fa-chart-column text-blue-600"></i> 옵션별 판매 수량 및 매출 분석</h3>
+                        <span id="salesComboChartNote" class="text-[10px] bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded">전체 옵션</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-1">막대 = 판매량, 꺾은선 = 매출액(만원). 동일 옵션 ID가 여러 행으로 존재하면 합산합니다.</p>
+                    <div class="h-[300px] mt-3"><canvas id="salesChartOptionCombo"></canvas></div>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm sales-option-chart-card">
+                    <div class="flex items-center justify-between gap-3">
+                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="fa-solid fa-boxes-stacked text-purple-600"></i> 구매 단위별 (1개입 / 2개입 / 3개입) 점유 현황</h3>
+                        <span class="text-[10px] text-slate-400 font-medium">번들링 구조</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-1">옵션명에서 구매 단위를 추출해 1·2·3개입으로 분류합니다.</p>
+                    <div class="h-64 mt-3"><canvas id="salesChartBundle"></canvas></div>
+                    <div id="salesBundleSummary" class="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-100"></div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm sales-option-chart-card">
+                    <div class="flex items-center justify-between gap-3">
+                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="fa-solid fa-scale-balanced text-emerald-600"></i> 옵션별 세트 단가 & 10g당 실질 가격 비교</h3>
+                        <span class="text-[10px] text-emerald-700 bg-emerald-50 font-bold px-2 py-0.5 rounded">가격 효율성</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-1">세트 평균 판매가(매출 ÷ 판매량)를 포장 중량으로 환산하여 10g당 가격을 계산합니다.</p>
+                    <div class="h-64 mt-3"><canvas id="salesChartUnitEconomics"></canvas></div>
+                </div>
+            </section>
+
+            <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pb-4 border-b border-slate-100">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2"><i class="fa-solid fa-table text-blue-600"></i> 판매 옵션별 종합 데이터</h3>
+                        <p class="text-[11px] text-slate-500 mt-1">첨부 리포트의 판매 옵션 분석 표를 동적 Raw Data 기준으로 다시 계산합니다.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+                        <button onclick="filterSalesOptionTable('all')" class="sales-option-filter-btn active px-3 py-1.5 text-xs font-semibold rounded-lg bg-white shadow-sm text-slate-800" data-filter="all">전체</button>
+                        <button onclick="filterSalesOptionTable('100g')" class="sales-option-filter-btn px-3 py-1.5 text-xs font-medium rounded-lg text-slate-600" data-filter="100g">100g</button>
+                        <button onclick="filterSalesOptionTable('30g')" class="sales-option-filter-btn px-3 py-1.5 text-xs font-medium rounded-lg text-slate-600" data-filter="30g">30g</button>
+                        <button onclick="filterSalesOptionTable('bundle')" class="sales-option-filter-btn px-3 py-1.5 text-xs font-medium rounded-lg text-slate-600" data-filter="bundle">묶음세트만</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto custom-scrollbar mt-3">
+                    <table class="w-full text-xs text-left sales-option-table">
+                        <thead class="bg-slate-50 text-slate-700 font-bold sticky top-0"><tr>
+                            <th class="py-3 px-3">옵션 규격명</th>
+                            <th class="py-3 px-3">식별자 (등록 / 옵션 ID)</th>
+                            <th class="py-3 px-3 text-right">주문</th>
+                            <th class="py-3 px-3 text-right">판매량</th>
+                            <th class="py-3 px-3 text-right">판매량 점유율</th>
+                            <th class="py-3 px-3 text-right">평균 판매가</th>
+                            <th class="py-3 px-3 text-right">매출액</th>
+                            <th class="py-3 px-3 text-right">매출 점유율</th>
+                            <th class="py-3 px-3 text-right">10g당 환산가</th>
+                        </tr></thead>
+                        <tbody id="salesOptionTableBody" class="divide-y divide-slate-100"></tbody>
+                        <tfoot class="bg-slate-50 font-bold border-t-2 border-slate-300"><tr>
+                            <td class="py-3 px-3" colspan="3">합계</td>
+                            <td id="salesTableTotalQty" class="py-3 px-3 text-right text-orange-600">0</td>
+                            <td class="py-3 px-3 text-right">100.00%</td>
+                            <td class="py-3 px-3 text-right">-</td>
+                            <td id="salesTableTotalRev" class="py-3 px-3 text-right text-orange-600">₩0</td>
+                            <td class="py-3 px-3 text-right">100.00%</td>
+                            <td id="salesTableAvg10g" class="py-3 px-3 text-right text-slate-500">-</td>
+                        </tr></tfoot>
+                    </table>
+                </div>
+            </section>
+
+            <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="fa-solid fa-database text-slate-600"></i> Raw Data 원본 보기</h3>
+                        <p class="text-[11px] text-slate-500 mt-1">업로드한 엑셀의 원본 컬럼을 그대로 확인할 수 있습니다.</p>
+                    </div>
+                    <span id="salesRawRowCount" class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-full">0행</span>
+                </div>
+                <div class="overflow-x-auto custom-scrollbar mt-3 max-h-[520px] border border-slate-200 rounded-lg">
+                    <table class="w-full text-[11px] text-left sales-option-raw-table">
+                        <thead id="salesRawTableHead" class="bg-slate-100 text-slate-700 font-bold sticky top-0 z-10"></thead>
+                        <tbody id="salesRawTableBody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
         </main>
     </div>
 
@@ -1346,6 +1657,62 @@
             return (num || 0).toFixed(2) + '%';
         }
 
+        // Shared toast helper
+        // 일부 신규 기능(예: 08 판매 옵션 Raw Data 업로드)에서도 사용하는 공용 알림 함수입니다.
+        // 기존 페이지에 toast 마크업이 없어도 동작하도록 필요 시 DOM을 생성합니다.
+        function showToast(title, desc, icon = '✅') {
+            let toast = document.getElementById('appToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'appToast';
+                toast.style.cssText = [
+                    'position:fixed',
+                    'right:24px',
+                    'bottom:24px',
+                    'z-index:9999',
+                    'max-width:min(420px, calc(100vw - 32px))',
+                    'background:#0f172a',
+                    'color:#fff',
+                    'border:1px solid rgba(148,163,184,.35)',
+                    'border-radius:12px',
+                    'box-shadow:0 18px 40px rgba(15,23,42,.22)',
+                    'padding:12px 14px',
+                    'display:flex',
+                    'align-items:flex-start',
+                    'gap:10px',
+                    'opacity:0',
+                    'transform:translateY(12px)',
+                    'pointer-events:none',
+                    'transition:opacity .2s ease, transform .2s ease',
+                    'font-family:inherit'
+                ].join(';');
+                toast.innerHTML = `
+                    <span id=\"appToastIcon\" style=\"font-size:18px;line-height:1.2;flex:0 0 auto\">✅</span>
+                    <div style=\"min-width:0\">
+                        <div id=\"appToastTitle\" style=\"font-size:12px;font-weight:800;line-height:1.4\"></div>
+                        <div id=\"appToastDesc\" style=\"margin-top:2px;font-size:11px;color:#cbd5e1;line-height:1.45;word-break:break-word\"></div>
+                    </div>`;
+                document.body.appendChild(toast);
+            }
+
+            const iconEl = document.getElementById('appToastIcon');
+            const titleEl = document.getElementById('appToastTitle');
+            const descEl = document.getElementById('appToastDesc');
+            if (iconEl) iconEl.textContent = icon || '✅';
+            if (titleEl) titleEl.textContent = title || '알림';
+            if (descEl) descEl.textContent = desc || '';
+
+            if (toast._timer) clearTimeout(toast._timer);
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0)';
+            toast.style.pointerEvents = 'auto';
+            toast._timer = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(12px)';
+                toast.style.pointerEvents = 'none';
+            }, 3200);
+        }
+
         // Initialize App
         window.addEventListener('DOMContentLoaded', () => {
             normalizeDashboardLayout();
@@ -1354,6 +1721,7 @@
             wirePanelExpansion();
             initSettingProfiles();
             applyFilters();
+            setupSalesOptionDropzone();
         });
 
         window.addEventListener('keydown', event => {
@@ -1413,6 +1781,9 @@
                     document.getElementById('rowCountDisplay').textContent = `(${json.length}개 레코드)`;
 
                     initFilters();
+                    syncSkuMarginMappingsFromNamedProfiles();
+                    renderMarginSkuSelect(selectedMarginSkuKey);
+                    if (selectedMarginSkuKey) loadSkuMarginSettings(selectedMarginSkuKey);
                     applyFilters();
                     alert(`파일 [${file.name}] 데이터가 성공적으로 로드되었습니다!`);
                 } catch (err) {
@@ -1423,6 +1794,37 @@
         }
 
         // Filter Initialization
+        function getSelectedReviewProducts() {
+            const productSel = document.getElementById('filterProduct');
+            if (!productSel) return [];
+            return Array.from(productSel.selectedOptions).map(option => option.value).filter(v => v && v !== 'ALL');
+        }
+
+        function productDisplayName(rawName) {
+            const text = String(rawName || '').trim();
+            if (!text) return '';
+            // 광고집행 상품명은 쉼표 기반 옵션 정보가 길게 붙는 경우가 많으므로 상품명 핵심부만 표시합니다.
+            const first = text.split(',')[0].trim();
+            return first || text;
+        }
+
+        function updateCurrentReviewedProducts() {
+            const el = document.getElementById('currentReviewedProducts');
+            if (!el) return;
+            const selected = getSelectedReviewProducts();
+            let label = '현재 검토 상품: 전체 상품';
+            if (selected.length === 1) {
+                label = `현재 검토 상품: ${productDisplayName(selected[0])}`;
+            } else if (selected.length > 1) {
+                const names = selected.map(productDisplayName);
+                const unique = [...new Set(names)];
+                label = unique.length === 1 ? `현재 검토 상품: ${unique[0]}` : `현재 검토 상품: ${unique.slice(0,2).join(' · ')}${unique.length > 2 ? ` 외 ${unique.length-2}개` : ''}`;
+            }
+            el.textContent = label;
+            el.title = label;
+            el.classList.remove('hidden');
+        }
+
         function initFilters() {
             const placements = new Set();
             const products = new Set();
@@ -1453,6 +1855,7 @@
             });
 
             document.getElementById('totalCountDisplay').textContent = rawDataset.length;
+            updateCurrentReviewedProducts();
         }
 
         function resetFilters() {
@@ -1514,6 +1917,7 @@
             
             document.getElementById('activeFilterSummary').textContent = summaryText.length > 0 ? summaryText.join(' | ') : '전체 데이터';
             document.getElementById('filteredCountDisplay').textContent = filteredDataset.length;
+            updateCurrentReviewedProducts();
 
             // Always refresh keyword analytics on upload/filter changes, regardless of the active tab.
             refreshKeywordAnalytics();
@@ -1545,8 +1949,249 @@
             document.getElementById(tabId).classList.remove('hidden');
             document.getElementById('btn-' + tabId).classList.add('active');
 
+            // 글로벌 통합 필터는 01번에서만 표시하고, 02번에서는 중복 노출하지 않습니다.
+            const globalFilterPanel = document.getElementById('globalFilterPanel');
+            if (globalFilterPanel) {
+                globalFilterPanel.classList.toggle('hidden', tabId === 'tab2');
+            }
+
             renderDashboard();
             if (tabId === 'tab7') renderKeywordManagement();
+            if (tabId === 'tab8') { setupSalesOptionDropzone(); renderTab8(); requestAnimationFrame(()=>window.dispatchEvent(new Event('resize'))); }
+        }
+
+        // PNG dashboard export (01 Executive Overview / 02 지면 성과 분석)
+        function togglePngExportMenu(event) {
+            if (event) { event.preventDefault(); event.stopPropagation(); }
+            const menu = document.getElementById('pngExportMenu');
+            if (!menu) return;
+            menu.classList.toggle('hidden');
+        }
+
+        function closePngExportMenu() {
+            document.getElementById('pngExportMenu')?.classList.add('hidden');
+        }
+
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('#pngExportControl')) closePngExportMenu();
+        });
+
+        function waitForPngRender() {
+            return new Promise(resolve => {
+                const fontsReady = document.fonts?.ready ? document.fonts.ready.catch(() => {}) : Promise.resolve();
+                fontsReady.then(() => {
+                    requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(resolve, 180)));
+                });
+            });
+        }
+
+        function getExportProductName() {
+            const selected = getSelectedReviewProducts();
+            let candidates = selected;
+            if (!candidates.length) {
+                candidates = [...new Set((filteredDataset || rawDataset || []).map(r => String(r?.['광고집행 상품명'] || '').trim()).filter(Boolean))];
+            }
+            const names = [...new Set(candidates.map(productDisplayName).filter(Boolean))];
+            if (names.length === 1) return names[0];
+            if (names.length > 1) return `${names[0]}_외${names.length-1}개`;
+            return '전체상품';
+        }
+
+        function sanitizeExportFilenamePart(text) {
+            return String(text || '전체상품')
+                .replace(/[\\/:*?"<>|]/g, '_')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .slice(0, 80) || '전체상품';
+        }
+
+        function pngExportFileName(tabId) {
+            const ymd = new Date().toISOString().slice(0,10).replace(/-/g,'');
+            const product = sanitizeExportFilenamePart(getExportProductName());
+            const base = `대표 분석자료_${product}_${ymd}`;
+            if (tabId === 'tab1') return `${base}_01.png`;
+            if (tabId === 'tab2') return `${base}_02.png`;
+            return `${base}.png`;
+        }
+
+        async function exportDashboardTabPng(tabId) {
+            closePngExportMenu();
+            const main = document.querySelector('main.dashboard-main-column, main');
+            const target = document.getElementById(tabId);
+            if (!main || !target) {
+                showToast('이미지 추출 오류', '추출 대상 화면을 찾을 수 없습니다.', '⚠️');
+                return;
+            }
+            if (typeof html2canvas !== 'function') {
+                showToast('이미지 추출 오류', 'PNG 변환 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인해주세요.', '⚠️');
+                return;
+            }
+
+            const originalTab = currentTab;
+            const originalScrollY = window.scrollY;
+            const modal = document.getElementById('expandModal');
+            const modalWasHidden = !modal || modal.classList.contains('hidden');
+            const sidebar = document.getElementById('sidebar');
+            const exportButton = document.querySelector('#pngExportControl > button');
+            const originalButtonHtml = exportButton?.innerHTML || '';
+
+            try {
+                if (exportButton) {
+                    exportButton.disabled = true;
+                    exportButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-blue-300 text-sm"></i>';
+                }
+                showToast('PNG 생성 중', `${tabId === 'tab1' ? '01 Executive Overview' : '02 지면 성과 분석'} 전체 화면을 고해상도 PNG로 변환하고 있습니다.`, '🖼️');
+
+                if (!modalWasHidden && modal) closeExpandModal();
+                switchTab(tabId);
+                await waitForPngRender();
+
+                // Capture only the right-side analysis area (global filter + selected tab), excluding navigation/header.
+                const canvas = await html2canvas(main, {
+                    scale: Math.min(2, Math.max(1.5, window.devicePixelRatio || 1)),
+                    useCORS: true,
+                    allowTaint: false,
+                    backgroundColor: '#f8fafc',
+                    logging: false,
+                    imageTimeout: 20000,
+                    scrollX: 0,
+                    scrollY: -window.scrollY,
+                    windowWidth: Math.max(document.documentElement.clientWidth, main.scrollWidth),
+                    windowHeight: Math.max(document.documentElement.clientHeight, main.scrollHeight),
+                    onclone: (clonedDoc) => {
+                        const clonedMain = clonedDoc.querySelector('main.dashboard-main-column, main');
+                        if (clonedMain) {
+                            clonedMain.style.cursor = 'default';
+                            clonedMain.querySelectorAll('*').forEach(el => {
+                                el.style.animation = 'none';
+                                el.style.transition = 'none';
+                            });
+                        }
+                        // Keep only the requested tab in the capture DOM.
+                        clonedDoc.querySelectorAll('.tab-content').forEach(el => {
+                            if (el.id === tabId) el.classList.remove('hidden');
+                            else el.classList.add('hidden');
+                        });
+                        // Hide the floating PNG menu/button from any accidental capture overlap.
+                        clonedDoc.querySelector('#pngExportControl')?.classList.add('hidden');
+                    }
+                });
+
+                const link = document.createElement('a');
+                link.download = pngExportFileName(tabId);
+                link.href = canvas.toDataURL('image/png', 1.0);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                showToast('PNG 추출 완료', `${tabId === 'tab1' ? '01 Executive Overview' : '02 지면 성과 분석'} 화면 전체가 PNG로 저장되었습니다.`, '✅');
+            } catch (error) {
+                console.error('PNG export error:', error);
+                showToast('PNG 추출 오류', error?.message || '이미지 변환 중 문제가 발생했습니다.', '⚠️');
+            } finally {
+                // Restore the dashboard state exactly where the user was.
+                if (originalTab && document.getElementById(originalTab)) switchTab(originalTab);
+                if (sidebar && isSidebarOpen) sidebar.style.display = 'flex';
+                window.scrollTo({top: originalScrollY, behavior:'auto'});
+                if (exportButton) {
+                    exportButton.disabled = false;
+                    exportButton.innerHTML = originalButtonHtml;
+                }
+            }
+        }
+
+        async function captureDashboardTabCanvas(tabId) {
+            const main = document.querySelector('main.dashboard-main-column, main');
+            const target = document.getElementById(tabId);
+            if (!main || !target) throw new Error('추출 대상 화면을 찾을 수 없습니다.');
+            if (typeof html2canvas !== 'function') throw new Error('PNG 변환 라이브러리를 불러오지 못했습니다.');
+
+            switchTab(tabId);
+            await waitForPngRender();
+
+            return html2canvas(main, {
+                scale: Math.min(2, Math.max(1.5, window.devicePixelRatio || 1)),
+                useCORS: true,
+                allowTaint: false,
+                backgroundColor: '#f8fafc',
+                logging: false,
+                imageTimeout: 20000,
+                scrollX: 0,
+                scrollY: -window.scrollY,
+                windowWidth: Math.max(document.documentElement.clientWidth, main.scrollWidth),
+                windowHeight: Math.max(document.documentElement.clientHeight, main.scrollHeight),
+                onclone: (clonedDoc) => {
+                    const clonedMain = clonedDoc.querySelector('main.dashboard-main-column, main');
+                    if (clonedMain) {
+                        clonedMain.style.cursor = 'default';
+                        clonedMain.querySelectorAll('*').forEach(el => {
+                            el.style.animation = 'none';
+                            el.style.transition = 'none';
+                        });
+                    }
+                    clonedDoc.querySelectorAll('.tab-content').forEach(el => {
+                        if (el.id === tabId) el.classList.remove('hidden');
+                        else el.classList.add('hidden');
+                    });
+                    clonedDoc.querySelector('#pngExportControl')?.classList.add('hidden');
+                }
+            });
+        }
+
+        async function exportDashboardTabsCombinedPng() {
+            closePngExportMenu();
+            const originalTab = currentTab;
+            const originalScrollY = window.scrollY;
+            const exportButton = document.querySelector('#pngExportControl > button');
+            const originalButtonHtml = exportButton?.innerHTML || '';
+            try {
+                if (exportButton) {
+                    exportButton.disabled = true;
+                    exportButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-blue-300 text-sm"></i>';
+                }
+                showToast('PNG 생성 중', '01 Executive Overview와 02 지면 성과 분석을 한 장의 PNG로 이어 붙이고 있습니다.', '🖼️');
+
+                const canvas1 = await captureDashboardTabCanvas('tab1');
+                const canvas2 = await captureDashboardTabCanvas('tab2');
+                const gap = 32;
+                const combined = document.createElement('canvas');
+                combined.width = Math.max(canvas1.width, canvas2.width);
+                combined.height = canvas1.height + gap + canvas2.height;
+                const ctx = combined.getContext('2d');
+                ctx.fillStyle = '#f8fafc';
+                ctx.fillRect(0, 0, combined.width, combined.height);
+                ctx.drawImage(canvas1, 0, 0);
+                ctx.fillStyle = '#e2e8f0';
+                ctx.fillRect(0, canvas1.height, combined.width, gap);
+                ctx.drawImage(canvas2, 0, canvas1.height + gap);
+
+                const link = document.createElement('a');
+                link.download = pngExportFileName('combined').replace(/\.png$/i, '_01_02.png');
+                link.href = combined.toDataURL('image/png', 1.0);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                showToast('PNG 추출 완료', '01·02 목차 전체가 하나의 고해상도 PNG로 저장되었습니다.', '✅');
+            } catch (error) {
+                console.error('Combined PNG export error:', error);
+                showToast('PNG 추출 오류', error?.message || '01·02 연속 이미지 생성 중 문제가 발생했습니다.', '⚠️');
+            } finally {
+                if (originalTab && document.getElementById(originalTab)) switchTab(originalTab);
+                window.scrollTo({top: originalScrollY, behavior:'auto'});
+                if (exportButton) {
+                    exportButton.disabled = false;
+                    exportButton.innerHTML = originalButtonHtml;
+                }
+            }
+        }
+
+        function exportCurrentDashboardTabPng() {
+            const supported = ['tab1','tab2'];
+            if (!supported.includes(currentTab)) {
+                closePngExportMenu();
+                showToast('현재 목차 PNG', '현재 선택된 목차는 PNG 전체 추출 대상이 아닙니다. 01 또는 02 목차를 선택해주세요.', 'ℹ️');
+                return;
+            }
+            exportDashboardTabPng(currentTab);
         }
 
         // MAIN RENDERER
@@ -1558,6 +2203,7 @@
             else if (currentTab === 'tab5') renderTab5();
             else if (currentTab === 'tab6') renderTab6();
             else if (currentTab === 'tab7') renderTab7();
+            else if (currentTab === 'tab8') renderTab8();
         }
 
         // TAB 1 RENDER
@@ -1797,6 +2443,7 @@
         // TAB 3 RENDER
         function renderTab3() {
             refreshKeywordAnalytics();
+            renderSkuMarginSettings();
         }
 
         
@@ -1838,6 +2485,270 @@
             if (store[current]) select.value = current;
         }
 
+        // SKU별 기초 마진 설정: 상품명 + 옵션ID를 하나의 SKU 식별자로 사용합니다.
+        const SKU_MARGIN_STORAGE_KEY = 'adDashboardSkuMarginSettings_v1';
+        let selectedMarginSkuKey = '';
+        let marginDraftConfigs = {}; // 저장 전에도 현재 선택 SKU만 실시간 미리보기 계산에 반영
+
+        function readSkuMarginStore() {
+            try {
+                const parsed = JSON.parse(localStorage.getItem(SKU_MARGIN_STORAGE_KEY) || '{}');
+                return parsed && typeof parsed === 'object' ? parsed : {};
+            } catch (e) { return {}; }
+        }
+
+        function writeSkuMarginStore(store) {
+            try { localStorage.setItem(SKU_MARGIN_STORAGE_KEY, JSON.stringify(store)); }
+            catch (e) { console.warn('SKU별 마진 설정 저장 실패', e); }
+        }
+
+        function getSkuKey(row) {
+            const product = String(row?.['광고집행 상품명'] ?? '').trim();
+            const optionId = String(row?.['광고집행 옵션ID'] ?? '').trim();
+            if (!product && !optionId) return '';
+            return optionId ? `${product}||${optionId}` : product;
+        }
+
+        function getSkuLabelByKey(key) {
+            const splitIndex = String(key).lastIndexOf('||');
+            if (splitIndex < 0) return String(key);
+            const product = String(key).slice(0, splitIndex);
+            const optionId = String(key).slice(splitIndex + 2);
+            return optionId ? `${product} · SKU ${optionId}` : product;
+        }
+
+        function extractSkuCoreLabel(productName) {
+            const raw = String(productName || '').trim();
+            if (!raw) return '';
+            const parts = raw.split(',').map(v => v.trim()).filter(Boolean);
+            const core = parts[0] || raw;
+            // 상품명 문자열 안의 내용량(예: 15g, 30g, 100g, 1kg, 500ml)을 우선 추출합니다.
+            const qtyMatch = raw.match(/(?:^|[^0-9])([0-9]+(?:\.[0-9]+)?\s?(?:kg|g|mg|l|ml|L|mL|리터|킬로그램|그램|밀리리터))(?![A-Za-z])/i);
+            const qty = qtyMatch ? qtyMatch[1].replace(/\s+/g, '') : '';
+            if (!qty) return shortProductName(core, 24);
+            // 핵심 상품명이 이미 동일 내용량으로 끝나는 경우 중복을 제거합니다.
+            const coreNorm = core.replace(/\s+/g, '').toLowerCase();
+            const qtyNorm = qty.replace(/\s+/g, '').toLowerCase();
+            if (coreNorm.endsWith(qtyNorm)) return shortProductName(core, 24);
+            return shortProductName(`${core} ${qty}`, 28);
+        }
+
+        function getCompactSkuLabelByKey(key) {
+            const splitIndex = String(key).lastIndexOf('||');
+            if (splitIndex < 0) return extractSkuCoreLabel(String(key));
+            const product = String(key).slice(0, splitIndex);
+            return extractSkuCoreLabel(product);
+        }
+
+        function getMarginSkuOptions() {
+            const map = new Map();
+            (rawDataset || []).forEach(r => {
+                const key = getSkuKey(r);
+                if (!key || map.has(key)) return;
+                map.set(key, {
+                    key,
+                    productName: String(r['광고집행 상품명'] ?? '').trim(),
+                    optionId: String(r['광고집행 옵션ID'] ?? '').trim()
+                });
+            });
+            return [...map.values()].sort((a,b) => getSkuLabelByKey(a.key).localeCompare(getSkuLabelByKey(b.key), 'ko', {numeric:true, sensitivity:'base'}));
+        }
+
+        function normalizeMarginConfig(config) {
+            if (!config || typeof config !== 'object') return null;
+            const asp = Number(config.asp);
+            const netMargin = Number(config.netMargin);
+            const targetProfit = Number(config.targetProfit);
+            if (!Number.isFinite(asp) || !Number.isFinite(netMargin) || !Number.isFinite(targetProfit)) return null;
+            return {
+                asp: Math.max(0, asp),
+                netMargin: Math.max(0, Math.min(100, netMargin)),
+                targetProfit: Math.max(0, Math.min(100, targetProfit))
+            };
+        }
+
+        function getFallbackMarginConfigForProduct(productName) {
+            const profileStore = readProfileStore(MARGIN_PROFILE_STORAGE_KEY);
+            if (productName && profileStore[productName]) return normalizeMarginConfig(profileStore[productName]);
+            return null;
+        }
+
+        function getMarginConfigForSku(row) {
+            const key = getSkuKey(row);
+            const draft = normalizeMarginConfig(marginDraftConfigs[key]);
+            if (draft) return { ...draft, configured: true, source: 'draft', skuKey: key };
+
+            const store = readSkuMarginStore();
+            const direct = normalizeMarginConfig(store[key]);
+            if (direct) return { ...direct, configured: true, source: 'sku', skuKey: key };
+
+            const productName = String(row?.['광고집행 상품명'] ?? '').trim();
+            const legacy = getFallbackMarginConfigForProduct(productName);
+            if (legacy) return { ...legacy, configured: true, source: 'template', skuKey: key };
+
+            return { asp: 0, netMargin: 0, targetProfit: 0, configured: false, source: 'unconfigured', skuKey: key };
+        }
+
+        function renderMarginSkuSelect(preferredKey = '') {
+            const select = document.getElementById('marginSkuSelect');
+            if (!select) return;
+            const options = getMarginSkuOptions();
+            const store = readSkuMarginStore();
+            const previous = preferredKey || selectedMarginSkuKey || select.value;
+            select.innerHTML = '';
+            if (!options.length) {
+                select.innerHTML = '<option value="">SKU 데이터가 없습니다.</option>';
+                selectedMarginSkuKey = '';
+                updateMarginSkuSettingStatus();
+                return;
+            }
+            options.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.key;
+                const saved = !!normalizeMarginConfig(store[item.key]);
+                option.textContent = `${getSkuLabelByKey(item.key)}${saved ? ' ✓' : ' · 미설정'}`;
+                select.appendChild(option);
+            });
+            const next = options.some(o => o.key === previous) ? previous : options[0].key;
+            select.value = next;
+            selectedMarginSkuKey = next;
+            updateMarginSkuSettingStatus();
+        }
+
+        function getCurrentMarginInputs() {
+            return {
+                asp: Math.max(0, Number(document.getElementById('inputAsp')?.value) || 0),
+                netMargin: Math.max(0, Math.min(100, Number(document.getElementById('inputNetMargin')?.value) || 0)),
+                targetProfit: Math.max(0, Math.min(100, Number(document.getElementById('inputTargetProfit')?.value) || 0))
+            };
+        }
+
+        function loadSkuMarginSettings(skuKey) {
+            if (!skuKey) return;
+            selectedMarginSkuKey = skuKey;
+            const store = readSkuMarginStore();
+            const saved = normalizeMarginConfig(store[skuKey]);
+            let config = saved;
+            if (!config) {
+                const info = getMarginSkuOptions().find(x => x.key === skuKey);
+                config = getFallbackMarginConfigForProduct(info?.productName || '');
+            }
+            if (!config) {
+                // 미설정 SKU는 선택되어 있는 공통 템플릿을 초깃값으로 사용합니다.
+                const templateName = document.getElementById('marginProfileSelect')?.value;
+                const template = templateName ? readProfileStore(MARGIN_PROFILE_STORAGE_KEY)[templateName] : null;
+                config = normalizeMarginConfig(template) || getCurrentMarginInputs();
+            }
+            marginDraftConfigs[skuKey] = { asp: Number(config.asp)||0, netMargin: Number(config.netMargin)||0, targetProfit: Number(config.targetProfit)||0 };
+            document.getElementById('inputAsp').value = config.asp ?? '';
+            document.getElementById('inputNetMargin').value = config.netMargin ?? '';
+            document.getElementById('inputTargetProfit').value = config.targetProfit ?? '';
+            try { localStorage.setItem(MARGIN_ACTIVE_PROFILE_KEY, ''); } catch (e) {}
+            updateMarginSkuSettingStatus();
+            calculateCoreKeywords();
+        }
+
+        function handleMarginInputChange() {
+            const skuKey = selectedMarginSkuKey || document.getElementById('marginSkuSelect')?.value;
+            if (skuKey) marginDraftConfigs[skuKey] = getCurrentMarginInputs();
+            updateMarginSkuSettingStatus(true);
+            calculateCoreKeywords();
+        }
+
+        function updateMarginSkuSettingStatus(isEditing = false) {
+            const el = document.getElementById('marginSkuSettingStatus');
+            const badge = document.getElementById('marginSkuSettingBadge');
+            const select = document.getElementById('marginSkuSelect');
+            if (!el || !badge || !select?.value) return;
+            const store = readSkuMarginStore();
+            const saved = normalizeMarginConfig(store[select.value]);
+            const draft = normalizeMarginConfig(marginDraftConfigs[select.value]);
+            const asp = Number(document.getElementById('inputAsp')?.value) || 0;
+            const netMargin = Number(document.getElementById('inputNetMargin')?.value) || 0;
+            const targetProfit = Number(document.getElementById('inputTargetProfit')?.value) || 0;
+            const isDraftDifferent = !!draft && (!saved || Math.abs(Number(draft.asp)-Number(saved.asp))>0.0001 || Math.abs(Number(draft.netMargin)-Number(saved.netMargin))>0.0001 || Math.abs(Number(draft.targetProfit)-Number(saved.targetProfit))>0.0001);
+            if (isEditing || isDraftDifferent) {
+                el.innerHTML = `<span class="text-amber-600 font-semibold">${saved ? '저장값과 다른 편집값' : '미저장 편집값'}</span> · 현재 입력값은 선택 SKU에만 실시간 미리보기로 적용됩니다. 저장하면 새로고침 후에도 유지됩니다.`;
+                badge.className = 'text-[10px] font-semibold px-2 py-1 rounded-md bg-amber-100 text-amber-700';
+                badge.textContent = '편집중';
+            } else if (saved) {
+                el.innerHTML = `저장됨 · 판매가 ${fmtKRW(saved.asp)} · 순마진율 ${fmtPct(saved.netMargin)} · 목표 수익 확보율 ${fmtPct(saved.targetProfit)}`;
+                badge.className = 'text-[10px] font-semibold px-2 py-1 rounded-md bg-emerald-100 text-emerald-700';
+                badge.textContent = '저장됨';
+            } else {
+                el.innerHTML = `미설정 · 현재 입력값으로 선택 SKU만 미리보기 중: ${fmtKRW(asp)} · ${fmtPct(netMargin)} · ${fmtPct(targetProfit)}`;
+                badge.className = 'text-[10px] font-semibold px-2 py-1 rounded-md bg-amber-100 text-amber-700';
+                badge.textContent = '미설정';
+            }
+            const allSkus = getMarginSkuOptions();
+            const savedCount = allSkus.filter(item => !!normalizeMarginConfig(store[item.key])).length;
+            el.innerHTML += `<span class="block text-[10px] text-slate-400 mt-1">SKU 설정 ${savedCount}/${allSkus.length}개 저장됨</span>`;
+        }
+
+        function saveCurrentSkuMarginSetting(options = {}) {
+            const skuKey = options.skuKey || selectedMarginSkuKey || document.getElementById('marginSkuSelect')?.value;
+            if (!skuKey) { alert('먼저 설정할 SKU를 선택해주세요.'); return false; }
+            const config = {
+                asp: String(Math.max(0, Number(document.getElementById('inputAsp')?.value) || 0)),
+                netMargin: String(Math.max(0, Math.min(100, Number(document.getElementById('inputNetMargin')?.value) || 0))),
+                targetProfit: String(Math.max(0, Math.min(100, Number(document.getElementById('inputTargetProfit')?.value) || 0))),
+                updatedAt: Date.now()
+            };
+            const store = readSkuMarginStore();
+            store[skuKey] = config;
+            delete marginDraftConfigs[skuKey];
+            writeSkuMarginStore(store);
+            if (!options.silent) alert(`SKU별 마진 설정이 저장되었습니다.
+
+${getSkuLabelByKey(skuKey)}`);
+            renderMarginSkuSelect(skuKey);
+            updateMarginSkuSettingStatus();
+            calculateCoreKeywords();
+            return true;
+        }
+
+        function syncSkuMarginMappingsFromNamedProfiles() {
+            const store = readSkuMarginStore();
+            let changed = false;
+            getMarginSkuOptions().forEach(item => {
+                if (normalizeMarginConfig(store[item.key])) return;
+                const legacy = getFallbackMarginConfigForProduct(item.productName);
+                if (legacy) {
+                    store[item.key] = { ...legacy, updatedAt: Date.now(), migratedFromTemplate: item.productName };
+                    changed = true;
+                }
+            });
+            if (changed) writeSkuMarginStore(store);
+        }
+
+        function applyInputsToUnconfiguredSkus() {
+            const skuOptions = getMarginSkuOptions();
+            const store = readSkuMarginStore();
+            const unconfigured = skuOptions.filter(item => !normalizeMarginConfig(store[item.key]));
+            if (!unconfigured.length) {
+                alert('현재 데이터의 모든 SKU가 이미 설정되어 있습니다.');
+                return;
+            }
+            const message = `현재 입력값을 미설정 SKU ${unconfigured.length}개에 저장할까요?\
+\
+판매가: ${fmtKRW(Number(document.getElementById('inputAsp')?.value)||0)}\
+순마진율: ${fmtPct(Number(document.getElementById('inputNetMargin')?.value)||0)}\
+목표 수익 확보율: ${fmtPct(Number(document.getElementById('inputTargetProfit')?.value)||0)}`;
+            if (!confirm(message)) return;
+            const config = {
+                asp: String(Math.max(0, Number(document.getElementById('inputAsp')?.value) || 0)),
+                netMargin: String(Math.max(0, Math.min(100, Number(document.getElementById('inputNetMargin')?.value) || 0))),
+                targetProfit: String(Math.max(0, Math.min(100, Number(document.getElementById('inputTargetProfit')?.value) || 0))),
+                updatedAt: Date.now()
+            };
+            unconfigured.forEach(item => { store[item.key] = { ...config }; });
+            writeSkuMarginStore(store);
+            renderMarginSkuSelect(selectedMarginSkuKey);
+            updateMarginSkuSettingStatus();
+            calculateCoreKeywords();
+            alert(`미설정 SKU ${unconfigured.length}개에 현재 설정값을 적용했습니다.`);
+        }
+
         function saveMarginProfile() {
             const nameEl = document.getElementById('marginProfileName');
             const name = (nameEl?.value || '').trim();
@@ -1864,7 +2775,10 @@
             document.getElementById('inputAsp').value = profile.asp ?? '';
             document.getElementById('inputNetMargin').value = profile.netMargin ?? '';
             document.getElementById('inputTargetProfit').value = profile.targetProfit ?? '';
+            const skuKey = selectedMarginSkuKey || document.getElementById('marginSkuSelect')?.value;
+            if (skuKey) marginDraftConfigs[skuKey] = getCurrentMarginInputs();
             try { localStorage.setItem(MARGIN_ACTIVE_PROFILE_KEY, name); } catch (e) {}
+            updateMarginSkuSettingStatus();
             calculateCoreKeywords();
         }
 
@@ -1950,61 +2864,108 @@
             const store = seedDefaultMarginProfiles();
             refreshProfileSelect('marginProfileSelect', MARGIN_PROFILE_STORAGE_KEY, '저장된 설정 불러오기');
             refreshProfileSelect('coreProfileSelect', CORE_PROFILE_STORAGE_KEY, '저장된 조건 불러오기');
+            syncSkuMarginMappingsFromNamedProfiles();
+            renderMarginSkuSelect(selectedMarginSkuKey);
             const active = localStorage.getItem(MARGIN_ACTIVE_PROFILE_KEY);
             const preferred = active && store[active] ? active : '소고기칩 100g';
             const select = document.getElementById('marginProfileSelect');
             if (select) select.value = preferred;
-            applyMarginProfileToInputs(preferred);
+            const skuSelect = document.getElementById('marginSkuSelect');
+            if (skuSelect?.value) {
+                loadSkuMarginSettings(skuSelect.value);
+            } else {
+                applyMarginProfileToInputs(preferred);
+            }
         }
 
         function calculateCoreKeywords() {
-            // Get Margin Inputs
-            const asp = Number(document.getElementById('inputAsp').value) || 0;
-            const netMarginPct = Number(document.getElementById('inputNetMargin').value) || 0;
-            const targetProfitPct = Number(document.getElementById('inputTargetProfit').value) || 0;
+            // 현재 선택된 SKU의 입력값은 화면 미리보기에 사용합니다.
+            const selectedSku = selectedMarginSkuKey || document.getElementById('marginSkuSelect')?.value || '';
+            const selectedInfo = getMarginSkuOptions().find(x => x.key === selectedSku);
+            const selectedFallback = selectedInfo ? getMarginConfigForSku({ '광고집행 상품명': selectedInfo.productName, '광고집행 옵션ID': selectedInfo.optionId }) : { asp: Number(document.getElementById('inputAsp')?.value)||0, netMargin: Number(document.getElementById('inputNetMargin')?.value)||0, targetProfit: Number(document.getElementById('inputTargetProfit')?.value)||0, configured:false };
+            const previewAsp = Number(document.getElementById('inputAsp').value) || 0;
+            const previewNetMarginPct = Number(document.getElementById('inputNetMargin').value) || 0;
+            const previewTargetProfitPct = Number(document.getElementById('inputTargetProfit').value) || 0;
 
             // Get Filter Inputs
             const minClick = Math.max(0, Number(document.getElementById('inputMinClick').value) || 0);
             const minOrder = Math.max(0, Number(document.getElementById('inputMinOrder').value) || 0);
 
-            // Calculate Base Margin Amounts
-            const netMarginAmt = asp * (netMarginPct / 100);
-            const targetProfitAmt = netMarginAmt * (targetProfitPct / 100);
-
-            // BEP ROAS = Revenue / allowable ad spend at break-even.
-            // At break-even, the entire base net margin can be used as ad spend.
-            const bepRoasPct = netMarginAmt > 0 ? (asp / netMarginAmt) * 100 : Infinity;
-
-            // Maximum CPA = net margin per order - profit that must remain after advertising
-            // This value is always linked to the margin settings above.
-            const maxCpa = Math.max(0, netMarginAmt - targetProfitAmt);
+            // Current SKU preview metrics
+            const previewNetMarginAmt = previewAsp * (previewNetMarginPct / 100);
+            const previewTargetProfitAmt = previewNetMarginAmt * (previewTargetProfitPct / 100);
+            const previewBepRoasPct = previewNetMarginAmt > 0 ? (previewAsp / previewNetMarginAmt) * 100 : Infinity;
+            const maxCpaPreview = Math.max(0, previewNetMarginAmt - previewTargetProfitAmt);
             const maxCpaInput = document.getElementById('inputMaxCpa');
-            maxCpaInput.value = Math.round(maxCpa);
+            if (maxCpaInput) maxCpaInput.value = Math.round(maxCpaPreview);
 
-            document.getElementById('calcNetMarginAmt').textContent = fmtNum(netMarginAmt);
-            document.getElementById('calcTargetProfitAmt').textContent = fmtNum(targetProfitAmt);
-            // Margin KPI cards are tied to the same live margin settings.
+            const calcNetMarginAmt = document.getElementById('calcNetMarginAmt');
+            const calcTargetProfitAmt = document.getElementById('calcTargetProfitAmt');
+            if (calcNetMarginAmt) calcNetMarginAmt.textContent = fmtNum(previewNetMarginAmt);
+            if (calcTargetProfitAmt) calcTargetProfitAmt.textContent = fmtNum(previewTargetProfitAmt);
+
             const kpiAsp = document.getElementById('kpiASP');
             const kpiNetMargin = document.getElementById('kpiNetMargin');
             const kpiNetMarginSub = document.getElementById('kpiNetMarginSub');
             const kpiBepRoas = document.getElementById('kpiBepRoas');
-            if (kpiAsp) kpiAsp.textContent = fmtKRW(asp);
-            if (kpiNetMargin) kpiNetMargin.textContent = fmtKRW(netMarginAmt);
-            if (kpiNetMarginSub) kpiNetMarginSub.textContent = `마진율 ${fmtPct(netMarginPct)}`;
-            if (kpiBepRoas) kpiBepRoas.textContent = netMarginPct > 0 ? fmtPct(10000 / netMarginPct) : '0.00%';
+            if (kpiAsp) kpiAsp.textContent = fmtKRW(previewAsp);
+            if (kpiNetMargin) kpiNetMargin.textContent = fmtKRW(previewNetMarginAmt);
+            if (kpiNetMarginSub) kpiNetMarginSub.textContent = `마진율 ${fmtPct(previewNetMarginPct)}`;
+            if (kpiBepRoas) kpiBepRoas.textContent = previewNetMarginPct > 0 ? fmtPct(10000 / previewNetMarginPct) : '0.00%';
             const bepRoasEl = document.getElementById('calcBepRoas');
-            if (bepRoasEl) bepRoasEl.textContent = Number.isFinite(bepRoasPct) ? bepRoasPct.toFixed(2) : '-';
+            if (bepRoasEl) bepRoasEl.textContent = Number.isFinite(previewBepRoasPct) ? previewBepRoasPct.toFixed(2) : '-';
 
-            // Filter & calculate Keywords
+            // Filter & calculate Keywords — SKU + 키워드를 함께 묶어 SKU별 수익성을 분리 계산합니다.
             let filteredCore = [];
+            const revKey = currentAttrWindow === '14' ? '총 전환매출액(14일)' : '총 전환매출액(1일)';
+            const orderKey = currentAttrWindow === '14' ? '총 주문수(14일)' : '총 주문수(1일)';
+            const coreMap = {};
 
-            coreKeywordsData.forEach(k => {
+            filteredDataset.forEach(r => {
+                const kw = String(r['키워드'] ?? '-').trim() || '-';
+                const skuKey = getSkuKey(r);
+                const mapKey = `${skuKey}|||${kw}`;
+                const cfg = getMarginConfigForSku(r);
+                if (!coreMap[mapKey]) {
+                    coreMap[mapKey] = {
+                        kw, skuKey, productName: String(r['광고집행 상품명'] ?? '').trim(), optionId: String(r['광고집행 옵션ID'] ?? '').trim(),
+                        spend: 0, rev: 0, order: 0, imp: 0, click: 0, configured: cfg.configured, marginConfig: cfg
+                    };
+                }
+                const k = coreMap[mapKey];
+                k.spend += Number(r['광고비']) || 0;
+                k.rev += Number(r[revKey]) || 0;
+                k.order += Number(r[orderKey]) || 0;
+                k.imp += Number(r['노출수']) || 0;
+                k.click += Number(r['클릭수']) || 0;
+            });
+
+            const allCoreRows = Object.values(coreMap);
+            coreKeywordsData = allCoreRows;
+
+            allCoreRows.forEach(k => {
+                const cfg = k.marginConfig;
+                const asp = Number(cfg.asp) || 0;
+                const netMarginPct = Number(cfg.netMargin) || 0;
+                const targetProfitPct = Number(cfg.targetProfit) || 0;
+                const netMarginAmt = asp * (netMarginPct / 100);
+                const targetProfitAmt = netMarginAmt * (targetProfitPct / 100);
+                const maxCpa = Math.max(0, netMarginAmt - targetProfitAmt);
+
                 k.ctr = k.imp > 0 ? (k.click / k.imp * 100) : 0;
                 k.cvr = k.click > 0 ? (k.order / k.click * 100) : 0;
                 k.cpc = k.click > 0 ? k.spend / k.click : 0;
-                k.cpa = k.order > 0 ? k.spend / k.order : Infinity; 
-                
-                if (k.order === 0 || k.cpa === Infinity) {
+                k.cpa = k.order > 0 ? k.spend / k.order : Infinity;
+                k.roas = k.spend > 0 ? (k.rev / k.spend * 100) : 0;
+                k.netMarginAmt = netMarginAmt;
+                k.targetProfitAmt = targetProfitAmt;
+                k.bepRoas = netMarginAmt > 0 ? (asp / netMarginAmt * 100) : Infinity;
+                k.maxCpa = maxCpa;
+
+                if (!cfg.configured) {
+                    k.marginPreservation = null;
+                    k.netProfitRate = null;
+                } else if (k.order === 0 || k.cpa === Infinity) {
                     k.marginPreservation = -100;
                     k.netProfitRate = -100;
                 } else {
@@ -2012,28 +2973,26 @@
                     k.netProfitRate = asp > 0 ? ((netMarginAmt - k.cpa) / asp) * 100 : 0;
                 }
 
-                // Apply Core Keyword Filters
-                // 1) 규모/관심: 최소 클릭수
-                // 2) 전환력: 최소 전환 주문수
-                // 3) 수익성: 최대 CPA (기초 마진 설정에서 자동 산출)
-                if (k.click >= minClick && k.order >= minOrder && k.cpa <= maxCpa) {
+                // Apply Core Keyword Filters — SKU별 최대 CPA 사용
+                if (cfg.configured && k.click >= minClick && k.order >= minOrder && k.cpa <= k.maxCpa) {
                     filteredCore.push(k);
                 }
             });
 
-            filteredCore.sort((a, b) => b.marginPreservation - a.marginPreservation);
+            filteredCore.sort((a, b) => (Number(b.marginPreservation)||-Infinity) - (Number(a.marginPreservation)||-Infinity));
 
             const tbody = document.getElementById('coreKeywordsTableBody');
             tbody.innerHTML = '';
-            
             filteredCore.slice(0, 100).forEach(k => {
                 const cpaText = k.cpa === Infinity ? '-' : fmtKRW(k.cpa);
                 let rowClass = 'hover:bg-emerald-50/30';
                 if (k.order === 0) rowClass = 'hover:bg-slate-50 opacity-60';
+                const skuLabel = getSkuLabelByKey(k.skuKey);
 
                 tbody.innerHTML += `
                     <tr class="${rowClass}">
-                        <td class="p-2.5 font-medium text-slate-800">${k.kw}</td>
+                        <td class="p-2.5 font-medium text-slate-800">${escapeHtml(k.kw)}</td>
+                        <td class="p-2.5 text-[10px] text-slate-500 core-sku-cell" title="${escapeHtmlAttr(skuLabel)}"><span class="core-sku-label">${escapeHtml(getCompactSkuLabelByKey(k.skuKey))}</span></td>
                         <td class="p-2.5 text-right core-col-traffic">${fmtNum(k.imp)}</td>
                         <td class="p-2.5 text-right core-col-traffic">${fmtNum(k.click)}</td>
                         <td class="p-2.5 text-right text-blue-600 font-medium core-col-traffic">${fmtPct(k.ctr)}</td>
@@ -2044,16 +3003,12 @@
                         <td class="p-2.5 text-right text-blue-600 font-bold core-col-scale">${fmtKRW(k.rev)}</td>
                         <td class="p-2.5 text-right core-col-profit">${cpaText}</td>
                         <td class="p-2.5 text-right font-medium core-col-profit">${fmtPct(k.roas)}</td>
-                        <td class="p-2.5 text-right font-bold text-emerald-600 core-col-margin">${k.marginPreservation === Infinity ? '∞%' : fmtPct(k.marginPreservation)}</td>
-                        <td class="p-2.5 text-right font-bold text-blue-700 core-col-netprofit">${k.netProfitRate === Infinity ? '∞%' : fmtPct(k.netProfitRate)}</td>
+                        <td class="p-2.5 text-right font-bold text-emerald-600 core-col-margin">${k.marginPreservation === null ? '<span class=\"text-amber-500\">미설정</span>' : fmtPct(k.marginPreservation)}</td>
+                        <td class="p-2.5 text-right font-bold text-blue-700 core-col-netprofit">${k.netProfitRate === null ? '<span class=\"text-amber-500\">미설정</span>' : fmtPct(k.netProfitRate)}</td>
                     </tr>
                 `;
             });
 
-            // Keep modal data in sync when the core modal is already open,
-            // but NEVER open/re-open the modal from an input recalculation.
-            // Previously this called openExpandModal('core') during every input event,
-            // which could make the "전체 화면" view appear unexpectedly while typing.
             const modalTableContainer = document.getElementById('expandModalTableContainer');
             const modalTitle = document.getElementById('expandModalTitle');
             if (modalTableContainer && modalTitle &&
@@ -2061,17 +3016,21 @@
                 modalTitle.innerText.includes('핵심')) {
                 currentModalData = filteredCore;
             }
+
+            const help = document.getElementById('maxCpaHelpText');
+            if (help) {
+                const selectedCfg = selectedFallback?.configured ? selectedFallback : { asp: previewAsp, netMargin: previewNetMarginPct, targetProfit: previewTargetProfitPct, configured: false };
+                help.textContent = selectedCfg.configured
+                    ? `현재 SKU 최대 CPA ${fmtKRW(Math.max(0, (selectedCfg.asp * selectedCfg.netMargin / 100) * (1 - selectedCfg.targetProfit / 100)))} · 여러 SKU 선택 시 각 SKU의 저장값으로 개별 적용`
+                    : '현재 SKU가 아직 저장되지 않았습니다. 저장 후 각 SKU 데이터에 개별 수익성 계산이 적용됩니다.';
+            }
+            updateMarginSkuSettingStatus();
         }
 
         function wirePanelExpansion() {
-            document.querySelectorAll('.tab-content .bg-white').forEach(panel => {
-                if (panel.dataset.noExpand === 'true' || panel.getAttribute('onclick')) return;
-                panel.classList.add('dashboard-panel');
-                panel.addEventListener('click', (event) => {
-                    if (event.target.closest('button,a,input,select,textarea,th')) return;
-                    openGenericPanelModal(panel);
-                });
-            });
+            // Panel-body click expansion has been intentionally disabled across all tabs.
+            // Panels with an explicit "전체/크게 보기" button keep their button handlers.
+            return;
         }
 
         function buildChartDataTable(chartId){
@@ -2208,7 +3167,7 @@
                 
                 thead.innerHTML = `
                     <tr class="formula-group-row">
-                        <th rowspan="2" class="p-3">순위</th><th rowspan="2" class="p-3">키워드</th>
+                        <th rowspan="2" class="p-3">순위</th><th rowspan="2" class="p-3">키워드</th><th rowspan="2" class="p-3">SKU</th>
                         <th colspan="3" class="formula-group-traffic">1. 유입력 (Traffic)</th><th colspan="2" class="formula-group-conversion">2. 전환력 (Conversion)</th>
                         <th colspan="3" class="formula-group-scale">3. 거래 규모 (Scale)</th><th colspan="4" class="formula-group-profit">4. 최종 수익성 (Profitability)</th>
                     </tr>
@@ -2223,13 +3182,14 @@
                 tbody.innerHTML = '';
                 currentModalData.forEach((k, idx) => {
                     const cpaText = k.cpa === Infinity ? '-' : fmtKRW(k.cpa);
-                    const marginPreservationText = k.order > 0 ? fmtPct(k.marginPreservation) : '<span class="text-rose-500">전환없음</span>';
-                    const netProfitRateText = k.order > 0 ? fmtPct(k.netProfitRate) : '<span class="text-rose-500">전환없음</span>';
+                    const marginPreservationText = k.marginPreservation === null ? '<span class="text-amber-500">미설정</span>' : (k.order > 0 ? fmtPct(k.marginPreservation) : '<span class="text-rose-500">전환없음</span>');
+                    const netProfitRateText = k.netProfitRate === null ? '<span class="text-amber-500">미설정</span>' : (k.order > 0 ? fmtPct(k.netProfitRate) : '<span class="text-rose-500">전환없음</span>');
 
                     tbody.innerHTML += `
                         <tr class="hover:bg-slate-50 border-b border-slate-100 ${k.order === 0 ? 'opacity-60':''}">
                             <td class="p-3 text-slate-400 font-bold">${idx + 1}</td>
-                            <td class="p-3 font-medium text-slate-800">${k.kw}</td>
+                            <td class="p-3 font-medium text-slate-800">${escapeHtml(k.kw)}</td>
+                            <td class="p-3 text-[10px] text-slate-500 core-sku-cell" title="${escapeHtmlAttr(getSkuLabelByKey(k.skuKey || ''))}"><span class="core-sku-label">${escapeHtml(getCompactSkuLabelByKey(k.skuKey || ''))}</span></td>
                             <td class="p-3 text-right core-col-traffic">${fmtNum(k.imp)}</td>
                             <td class="p-3 text-right core-col-traffic">${fmtNum(k.click)}</td>
                             <td class="p-3 text-right text-blue-600 font-medium core-col-traffic">${fmtPct(k.ctr)}</td>
@@ -2656,16 +3616,17 @@
             const revKey = currentAttrWindow === '14' ? '총 전환매출액(14일)' : '총 전환매출액(1일)';
             const order = Number(row[orderKey]) || 0;
             const rev = Number(row[revKey]) || 0;
-            const asp = Number(document.getElementById('inputAsp')?.value) || 0;
-            const netMarginPct = Number(document.getElementById('inputNetMargin')?.value) || 0;
+            const marginConfig = getMarginConfigForSku(row);
+            const asp = Number(marginConfig.asp) || 0;
+            const netMarginPct = Number(marginConfig.netMargin) || 0;
             const netMarginAmt = asp * (netMarginPct / 100);
             const ctr = imp > 0 ? click / imp * 100 : 0;
             const cvr = click > 0 ? order / click * 100 : 0;
             const cpc = click > 0 ? spend / click : 0;
             const cpa = order > 0 ? spend / order : Infinity;
             const roas = spend > 0 ? rev / spend * 100 : 0;
-            const marginPreservation = order > 0 && Number.isFinite(cpa) ? (netMarginAmt > 0 ? ((netMarginAmt - cpa) / netMarginAmt) * 100 : 0) : (order > 0 ? -100 : -100);
-            const netProfitRate = order > 0 && Number.isFinite(cpa) ? (asp > 0 ? ((netMarginAmt - cpa) / asp) * 100 : 0) : (order > 0 ? -100 : -100);
+            const marginPreservation = !marginConfig.configured ? null : (order > 0 && Number.isFinite(cpa) ? (netMarginAmt > 0 ? ((netMarginAmt - cpa) / netMarginAmt) * 100 : 0) : (order > 0 ? -100 : -100));
+            const netProfitRate = !marginConfig.configured ? null : (order > 0 && Number.isFinite(cpa) ? (asp > 0 ? ((netMarginAmt - cpa) / asp) * 100 : 0) : (order > 0 ? -100 : -100));
             const calculated = {
                 '__ctr': ctr, '__order': order, '__cvr': cvr, '__cpc': cpc, '__rev': rev, '__cpa': cpa, '__roas': roas, '__marginPreservation': marginPreservation, '__netProfitRate': netProfitRate
             };
@@ -3033,6 +3994,457 @@
             if(manBody) manBody.innerHTML=manRows.map(({row})=>`<tr class="keyword-row-manual">${keywordManageLayout.manual.order.map(key=>keywordManageCell('manual',key,row,store)).join('')}</tr>`).join('')||`<tr><td colspan="${keywordManageLayout.manual.order.length}" class="text-center text-slate-400 py-12">등록된 수동 입찰가가 없습니다.</td></tr>`;
             bindKeywordManageTableInteractions();
         }
+        // SKU 수익성 설정 일괄 편집기
+        let skuMarginBulkDrafts = {};
+
+        function getSkuMarginBulkConfig(item) {
+            const key = item.key;
+            const draft = normalizeMarginConfig(skuMarginBulkDrafts[key]);
+            if (draft) return { ...draft, configured: true, source: 'bulk-draft' };
+            const store = readSkuMarginStore();
+            const saved = normalizeMarginConfig(store[key]);
+            if (saved) return { ...saved, configured: true, source: 'sku' };
+            const legacy = getFallbackMarginConfigForProduct(item.productName);
+            if (legacy) return { ...legacy, configured: false, source: 'template' };
+            return { asp: 0, netMargin: 0, targetProfit: 0, configured: false, source: 'unconfigured' };
+        }
+
+        function skuMarginBulkInputChanged(skuKey, field, value) {
+            const current = getSkuMarginBulkConfig(getMarginSkuOptions().find(x => x.key === skuKey) || {key:skuKey,productName:''});
+            const draft = { asp: Number(current.asp)||0, netMargin: Number(current.netMargin)||0, targetProfit: Number(current.targetProfit)||0 };
+            draft[field] = field === 'asp' ? Math.max(0, Number(value)||0) : Math.max(0, Math.min(100, Number(value)||0));
+            skuMarginBulkDrafts[skuKey] = draft;
+
+            // 입력 중에는 테이블 전체를 다시 그리지 않아 커서/포커스가 유지되도록 합니다.
+            const options = getMarginSkuOptions();
+            const store = readSkuMarginStore();
+            const saved = normalizeMarginConfig(store[skuKey]);
+            const row = document.querySelector(`[data-sku-margin-row="${CSS.escape(skuKey)}"]`);
+            const marginAmt = draft.asp * draft.netMargin / 100;
+            const targetAmt = marginAmt * draft.targetProfit / 100;
+            const bep = marginAmt > 0 ? draft.asp / marginAmt * 100 : Infinity;
+            const maxCpa = Math.max(0, marginAmt-targetAmt);
+            if (row) {
+                row.classList.toggle('sku-margin-row-unsaved', !saved || Math.abs(draft.asp-saved.asp)>0.0001 || Math.abs(draft.netMargin-saved.netMargin)>0.0001 || Math.abs(draft.targetProfit-saved.targetProfit)>0.0001);
+                const setCell=(name,html)=>{const el=row.querySelector(`[data-sku-margin-calc="${name}"]`);if(el)el.innerHTML=html;};
+                const isUnsaved=!saved || Math.abs(draft.asp-saved.asp)>0.0001 || Math.abs(draft.netMargin-saved.netMargin)>0.0001 || Math.abs(draft.targetProfit-saved.targetProfit)>0.0001;
+                const statusEl=row.querySelector('[data-sku-margin-status]');
+                if(statusEl) statusEl.innerHTML=isUnsaved?'<span class="sku-margin-status-dot text-amber-600"><i class="fa-solid fa-pen"></i>편집중</span>':saved?'<span class="sku-margin-status-dot text-emerald-600"><i class="fa-solid fa-circle-check"></i>저장됨</span>':'<span class="sku-margin-status-dot text-slate-400"><i class="fa-solid fa-minus-circle"></i>미설정</span>';
+                setCell('marginAmt',marginAmt>0?fmtKRW(marginAmt):'-');
+                setCell('targetAmt',marginAmt>0?fmtKRW(targetAmt):'-');
+                setCell('bep',Number.isFinite(bep)?fmtPct(bep):'-');
+                setCell('maxCpa',marginAmt>0?fmtKRW(maxCpa):'-');
+            }
+            const unsavedCount=Object.keys(skuMarginBulkDrafts).filter(key=>{const d=normalizeMarginConfig(skuMarginBulkDrafts[key]), sv=normalizeMarginConfig(store[key]);return !!d&&(!sv||Math.abs(d.asp-sv.asp)>0.0001||Math.abs(d.netMargin-sv.netMargin)>0.0001||Math.abs(d.targetProfit-sv.targetProfit)>0.0001);}).length;
+            const unsavedEl=document.getElementById('skuMarginUnsavedCount'); if(unsavedEl) unsavedEl.textContent=`${unsavedCount}개`;
+            // 기존 03/06 계산 로직에도 현재 편집 SKU가 선택된 경우 즉시 미리보기 적용
+            if (selectedMarginSkuKey === skuKey) {
+                marginDraftConfigs[skuKey] = { ...draft };
+                document.getElementById('inputAsp').value = draft.asp;
+                document.getElementById('inputNetMargin').value = draft.netMargin;
+                document.getElementById('inputTargetProfit').value = draft.targetProfit;
+                updateMarginSkuSettingStatus(true);
+            }
+            calculateCoreKeywords();
+        }
+
+        function applyCurrentSkuValueToAllBulkRows() {
+            const base = getCurrentMarginInputs();
+            const options = getMarginSkuOptions();
+            if (!options.length) { alert('현재 데이터에서 SKU를 찾을 수 없습니다.'); return; }
+            if (!confirm(`현재 입력값을 ${options.length}개 SKU 전체에 적용하시겠습니까?\n\n판매가: ${fmtKRW(base.asp)}\n순마진율: ${fmtPct(base.netMargin)}\n목표 수익 확보율: ${fmtPct(base.targetProfit)}`)) return;
+            options.forEach(item => { skuMarginBulkDrafts[item.key] = { ...base }; });
+            renderSkuMarginSettings();
+            calculateCoreKeywords();
+        }
+
+        function saveAllSkuMarginSettings() {
+            const options = getMarginSkuOptions();
+            if (!options.length) { alert('현재 데이터에서 SKU를 찾을 수 없습니다.'); return; }
+            const store = readSkuMarginStore();
+            let count = 0;
+            options.forEach(item => {
+                const cfg = normalizeMarginConfig(skuMarginBulkDrafts[item.key]);
+                if (!cfg) return;
+                store[item.key] = { asp: String(cfg.asp), netMargin: String(cfg.netMargin), targetProfit: String(cfg.targetProfit), updatedAt: Date.now(), source: 'bulk-editor' };
+                delete skuMarginBulkDrafts[item.key];
+                count++;
+            });
+            if (!count) { alert('저장할 변경값이 없습니다.'); return; }
+            writeSkuMarginStore(store);
+            // 현재 선택 SKU의 입력창 및 draft도 저장값으로 정리
+            if (selectedMarginSkuKey) {
+                const saved = normalizeMarginConfig(store[selectedMarginSkuKey]);
+                if (saved) {
+                    marginDraftConfigs[selectedMarginSkuKey] = { ...saved };
+                    document.getElementById('inputAsp').value = saved.asp;
+                    document.getElementById('inputNetMargin').value = saved.netMargin;
+                    document.getElementById('inputTargetProfit').value = saved.targetProfit;
+                    delete marginDraftConfigs[selectedMarginSkuKey];
+                }
+                renderMarginSkuSelect(selectedMarginSkuKey);
+                updateMarginSkuSettingStatus();
+            }
+            renderSkuMarginSettings();
+            calculateCoreKeywords();
+            alert(`${count}개 SKU의 수익성 설정을 저장했습니다.`);
+        }
+
+        function renderSkuMarginSettings() {
+            const body = document.getElementById('skuMarginSettingsBody');
+            if (!body) return;
+            const search = (document.getElementById('skuMarginSearch')?.value || '').trim().toLowerCase();
+            const options = getMarginSkuOptions().filter(item => {
+                if (!search) return true;
+                return item.productName.toLowerCase().includes(search) || String(item.optionId).toLowerCase().includes(search) || getSkuLabelByKey(item.key).toLowerCase().includes(search);
+            });
+            const store = readSkuMarginStore();
+            const all = getMarginSkuOptions();
+            const configured = all.filter(item => !!normalizeMarginConfig(store[item.key])).length;
+            const unsaved = Object.keys(skuMarginBulkDrafts).filter(key => {
+                const d = normalizeMarginConfig(skuMarginBulkDrafts[key]);
+                const s0 = normalizeMarginConfig(store[key]);
+                return !!d && (!s0 || Math.abs(d.asp-s0.asp)>0.0001 || Math.abs(d.netMargin-s0.netMargin)>0.0001 || Math.abs(d.targetProfit-s0.targetProfit)>0.0001);
+            });
+            const configuredRates = all.map(item => normalizeMarginConfig(store[item.key])).filter(Boolean);
+            const avgRate = configuredRates.length ? configuredRates.reduce((sum,c)=>sum+Number(c.netMargin||0),0)/configuredRates.length : 0;
+            const setText=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+            setText('skuMarginTotalCount', `${all.length}개`);
+            setText('skuMarginConfiguredCount', `${configured}개`);
+            setText('skuMarginUnsavedCount', `${unsaved.length}개`);
+            setText('skuMarginAverageRate', fmtPct(avgRate));
+
+            if (!options.length) {
+                body.innerHTML = `<tr><td colspan="10" class="text-center text-slate-400 py-12">검색 결과가 없습니다.</td></tr>`;
+                return;
+            }
+            body.innerHTML = options.map(item => {
+                const cfg = getSkuMarginBulkConfig(item);
+                const saved = normalizeMarginConfig(store[item.key]);
+                const draft = normalizeMarginConfig(skuMarginBulkDrafts[item.key]);
+                const isUnsaved = !!draft && (!saved || Math.abs(draft.asp-saved.asp)>0.0001 || Math.abs(draft.netMargin-saved.netMargin)>0.0001 || Math.abs(draft.targetProfit-saved.targetProfit)>0.0001);
+                const asp = Number(cfg.asp)||0;
+                const netMargin = Number(cfg.netMargin)||0;
+                const targetProfit = Number(cfg.targetProfit)||0;
+                const marginAmt = asp * netMargin / 100;
+                const targetAmt = marginAmt * targetProfit / 100;
+                const bep = marginAmt > 0 ? asp / marginAmt * 100 : Infinity;
+                const maxCpa = Math.max(0, marginAmt-targetAmt);
+                const fullLabel = getSkuLabelByKey(item.key);
+                const status = isUnsaved ? '<span class="sku-margin-status-dot text-amber-600"><i class="fa-solid fa-pen"></i>편집중</span>' : saved ? '<span class="sku-margin-status-dot text-emerald-600"><i class="fa-solid fa-circle-check"></i>저장됨</span>' : '<span class="sku-margin-status-dot text-slate-400"><i class="fa-solid fa-minus-circle"></i>미설정</span>';
+                return `<tr class="${isUnsaved ? 'sku-margin-row-unsaved' : ''}">
+                    <td class="p-3 text-center">${status}</td>
+                    <td class="p-3 font-semibold text-slate-800" title="${escapeHtmlAttr(fullLabel)}"><div class="truncate max-w-[330px]">${escapeHtml(item.productName || '-')}</div></td>
+                    <td class="p-3 text-center font-semibold text-slate-600">${escapeHtml(String(item.optionId || '-'))}</td>
+                    <td class="p-3 text-right"><input class="sku-margin-input" type="number" min="0" step="1" value="${asp}" oninput="skuMarginBulkInputChanged('${escapeJsAttr(item.key)}','asp',this.value)"></td>
+                    <td class="p-3 text-right"><input class="sku-margin-input percent" type="number" min="0" max="100" step="0.01" value="${netMargin}" oninput="skuMarginBulkInputChanged('${escapeJsAttr(item.key)}','netMargin',this.value)"></td>
+                    <td class="p-3 text-right"><input class="sku-margin-input percent" type="number" min="0" max="100" step="0.01" value="${targetProfit}" oninput="skuMarginBulkInputChanged('${escapeJsAttr(item.key)}','targetProfit',this.value)"></td>
+                    <td class="p-3 text-right font-bold text-blue-700">${marginAmt>0?fmtKRW(marginAmt):'-'}</td>
+                    <td class="p-3 text-right font-bold text-emerald-700">${marginAmt>0?fmtKRW(targetAmt):'-'}</td>
+                    <td class="p-3 text-right font-bold text-violet-700">${Number.isFinite(bep)?fmtPct(bep):'-'}</td>
+                    <td class="p-3 text-right font-bold text-slate-800">${marginAmt>0?fmtKRW(maxCpa):'-'}</td>
+                </tr>`;
+            }).join('');
+        }
+
+
+        // ==============================
+        // TAB 8: 판매 옵션 분석
+        // ==============================
+        const SALES_OPTION_SAMPLE_DATA = [
+            {"옵션 ID":"95947132033","옵션명":"우아 유아용 소고기칩 (어린이 간식 목초우), 1개, 100g","상품명":"우아 유아용 소고기칩 (어린이 간식 목초우)","등록상품ID":"16352620178","카테고리":"식품","판매방식":"로켓그로스","매출(원)":918000,"주문":34,"판매량":34,"방문자":0,"조회":0,"장바구니":0,"구매전환율":"0.00%","아이템위너 비율(%)":0,"총 매출(원)":918000,"총 판매수":34,"총 취소 금액(원)":0,"총 취소된 상품수":0,"즉시 취소된 상품수":0},
+            {"옵션 ID":"95947132034","옵션명":"우아 유아용 소고기칩 (어린이 간식 목초우), 1개, 30g","상품명":"우아 유아용 소고기칩 (어린이 간식 목초우)","등록상품ID":"16352620178","카테고리":"식품","판매방식":"로켓그로스","매출(원)":690200,"주문":57,"판매량":58,"방문자":0,"조회":0,"장바구니":0,"구매전환율":"0.00%","아이템위너 비율(%)":0,"총 매출(원)":690200,"총 판매수":58,"총 취소 금액(원)":0,"총 취소된 상품수":0,"즉시 취소된 상품수":0},
+            {"옵션 ID":"96000531166","옵션명":"우아 유아용 소고기칩 (어린이 간식 목초우), 2개, 100g","상품명":"우아 유아용 소고기칩 (어린이 간식 목초우)","등록상품ID":"16352620178","카테고리":"식품","판매방식":"로켓그로스","매출(원)":53900,"주문":1,"판매량":1,"방문자":0,"조회":0,"장바구니":0,"구매전환율":"0.00%","아이템위너 비율(%)":0,"총 매출(원)":53900,"총 판매수":1,"총 취소 금액(원)":0,"총 취소된 상품수":0,"즉시 취소된 상품수":0},
+            {"옵션 ID":"96000531167","옵션명":"우아 유아용 소고기칩 (어린이 간식 목초우), 3개, 100g","상품명":"우아 유아용 소고기칩 (어린이 간식 목초우)","등록상품ID":"16352620178","카테고리":"식품","판매방식":"로켓그로스","매출(원)":80700,"주문":1,"판매량":1,"방문자":0,"조회":0,"장바구니":0,"구매전환율":"0.00%","아이템위너 비율(%)":0,"총 매출(원)":80700,"총 판매수":1,"총 취소 금액(원)":0,"총 취소된 상품수":0,"즉시 취소된 상품수":0},
+            {"옵션 ID":"96000531170","옵션명":"우아 유아용 소고기칩 (어린이 간식 목초우), 2개, 30g","상품명":"우아 유아용 소고기칩 (어린이 간식 목초우)","등록상품ID":"16352620178","카테고리":"식품","판매방식":"로켓그로스","매출(원)":166320,"주문":7,"판매량":7,"방문자":0,"조회":0,"장바구니":0,"구매전환율":"0.00%","아이템위너 비율(%)":0,"총 매출(원)":166320,"총 판매수":7,"총 취소 금액(원)":0,"총 취소된 상품수":0,"즉시 취소된 상품수":0},
+            {"옵션 ID":"96000531172","옵션명":"우아 유아용 소고기칩 (어린이 간식 목초우), 3개, 30g","상품명":"우아 유아용 소고기칩 (어린이 간식 목초우)","등록상품ID":"16352620178","카테고리":"식품","판매방식":"로켓그로스","매출(원)":35580,"주문":1,"판매량":1,"방문자":0,"조회":0,"장바구니":0,"구매전환율":"0.00%","아이템위너 비율(%)":0,"총 매출(원)":35580,"총 판매수":1,"총 취소 금액(원)":0,"총 취소된 상품수":0,"즉시 취소된 상품수":0},
+            {"옵션 ID":"96072782853","옵션명":"우아 유아용 소고기칩 (어린이 간식 목초우), 1개, 100g","상품명":"우아 유아용 소고기칩 (어린이 간식 목초우)","등록상품ID":"16389006235","카테고리":"식품","판매방식":"로켓그로스","매출(원)":26190,"주문":1,"판매량":1,"방문자":0,"조회":0,"장바구니":0,"구매전환율":"0.00%","아이템위너 비율(%)":0,"총 매출(원)":26190,"총 판매수":1,"총 취소 금액(원)":0,"총 취소된 상품수":0,"즉시 취소된 상품수":0}
+        ];
+
+        let salesOptionRawRows = SALES_OPTION_SAMPLE_DATA.map(r => ({...r}));
+        let salesOptionFilter = 'all';
+        let salesOptionChartInstances = {};
+
+        function salesParseNumber(value) {
+            if (value === null || value === undefined || value === '') return 0;
+            if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+            const text = String(value).replace(/,/g,'').replace(/₩/g,'').replace(/원/g,'').trim();
+            const n = parseFloat(text.replace(/%$/,''));
+            return Number.isFinite(n) ? n : 0;
+        }
+
+        function salesParsePercent(value) {
+            if (value === null || value === undefined || value === '') return 0;
+            if (typeof value === 'number') return value;
+            const n = parseFloat(String(value).replace(/,/g,'').replace(/%/g,'').trim());
+            return Number.isFinite(n) ? n : 0;
+        }
+
+        function salesEscape(value) {
+            return escapeHtml(value === null || value === undefined ? '' : String(value));
+        }
+
+        function salesOptionName(row) {
+            return row['옵션명'] || row['상품명'] || '(옵션명 없음)';
+        }
+
+        function salesExtractPackCount(row) {
+            const text = `${row['옵션명'] || ''} ${row['상품명'] || ''}`;
+            const m = text.match(/(\d+)\s*(?:개|개입)/i);
+            return m ? parseInt(m[1],10) : 1;
+        }
+
+        function salesExtractWeight(row) {
+            const text = `${row['옵션명'] || ''} ${row['상품명'] || ''}`;
+            const g = text.match(/(\d+(?:\.\d+)?)\s*g\b/i);
+            if (g) return parseFloat(g[1]);
+            const kg = text.match(/(\d+(?:\.\d+)?)\s*kg\b/i);
+            if (kg) return parseFloat(kg[1]) * 1000;
+            return 0;
+        }
+
+        function salesCompactOptionLabel(row) {
+            const weight = salesExtractWeight(row);
+            const pack = salesExtractPackCount(row);
+            return `${weight ? weight+'g' : '규격없음'} ${pack}개입`;
+        }
+
+        function salesAggregateRows(rows) {
+            const map = new Map();
+            rows.forEach(r => {
+                const optId = String(r['옵션 ID'] ?? r['옵션ID'] ?? '').trim();
+                const name = salesOptionName(r);
+                const prodId = String(r['등록상품ID'] ?? '').trim();
+                const key = optId ? `OPT:${optId}` : `ROW:${prodId}|${name}`;
+                if (!map.has(key)) {
+                    map.set(key, {
+                        key, optionId: optId || '-', productId: prodId || '-', optionName: name,
+                        productName: r['상품명'] || '-', weight: salesExtractWeight(r), pack: salesExtractPackCount(r),
+                        orders: 0, qty: 0, revenue: 0, totalRevenue: 0
+                    });
+                }
+                const item = map.get(key);
+                item.orders += salesParseNumber(r['주문']);
+                item.qty += salesParseNumber(r['판매량'] ?? r['총 판매수']);
+                item.revenue += salesParseNumber(r['매출(원)'] ?? r['총 매출(원)']);
+                item.totalRevenue += salesParseNumber(r['총 매출(원)'] ?? r['매출(원)']);
+                item.weight = item.weight || salesExtractWeight(r);
+                item.pack = item.pack || salesExtractPackCount(r);
+            });
+            return [...map.values()];
+        }
+
+        function salesOptionSummary() {
+            const items = salesAggregateRows(salesOptionRawRows);
+            const totalQty = items.reduce((a,b)=>a+b.qty,0);
+            const totalRevenue = items.reduce((a,b)=>a+b.revenue,0);
+            const totalOrders = items.reduce((a,b)=>a+b.orders,0);
+            const weight = {'30g':{qty:0,rev:0},'100g':{qty:0,rev:0},'기타':{qty:0,rev:0}};
+            const bundle = {'1개입':{orders:0,qty:0,rev:0},'2개입':{orders:0,qty:0,rev:0},'3개입':{orders:0,qty:0,rev:0},'기타':{orders:0,qty:0,rev:0}};
+            items.forEach(i => {
+                const wk = i.weight===30 ? '30g' : i.weight===100 ? '100g' : '기타';
+                weight[wk].qty += i.qty; weight[wk].rev += i.revenue;
+                const bk = i.pack===1 ? '1개입' : i.pack===2 ? '2개입' : i.pack===3 ? '3개입' : '기타';
+                bundle[bk].orders += i.orders; bundle[bk].qty += i.qty; bundle[bk].rev += i.revenue;
+            });
+            const topQty = [...items].sort((a,b)=>b.qty-a.qty)[0] || null;
+            const topRev = [...items].sort((a,b)=>b.revenue-a.revenue)[0] || null;
+            return {items,totalQty,totalRevenue,totalOrders,weight,bundle,topQty,topRev};
+        }
+
+        function destroySalesOptionChart(id) {
+            if (salesOptionChartInstances[id]) {
+                salesOptionChartInstances[id].destroy();
+                delete salesOptionChartInstances[id];
+            }
+        }
+
+        function renderSalesOptionDoughnut(id, labels, values, titleMode) {
+            destroySalesOptionChart(id);
+            const el=document.getElementById(id); if(!el) return;
+            salesOptionChartInstances[id] = new Chart(el.getContext('2d'), {
+                type:'doughnut', data:{labels,datasets:[{data:values,backgroundColor:['#38BDF8','#F97316','#94A3B8'],borderWidth:2,borderColor:'#fff'}]},
+                plugins:[chartValueLabelPlugin], options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{font:{size:10,weight:'700'},padding:10}},title:{display:true,text:titleMode,font:{size:11,weight:'800'}},valueLabels:{display:true,currency:titleMode.includes('매출'),showPct:true,pctMode:'stack',fontSize:10}}}
+            });
+        }
+
+        function renderSalesOptionCharts(summary) {
+            const wtLabels=['30g 제품군','100g 제품군'];
+            const wtQty=[summary.weight['30g'].qty,summary.weight['100g'].qty];
+            const wtRev=[summary.weight['30g'].rev,summary.weight['100g'].rev];
+            renderSalesOptionDoughnut('salesChartVolumeShare',wtLabels,wtQty,'판매량 비중');
+            renderSalesOptionDoughnut('salesChartRevenueShare',wtLabels,wtRev,'매출액 비중');
+
+            const items = summary.items.length>20 ? [...summary.items].sort((a,b)=>b.revenue-a.revenue).slice(0,20) : summary.items;
+            destroySalesOptionChart('salesChartOptionCombo');
+            const comboEl=document.getElementById('salesChartOptionCombo');
+            if (comboEl) salesOptionChartInstances['salesChartOptionCombo']=new Chart(comboEl.getContext('2d'),{
+                type:'bar',data:{labels:items.map(i=>salesCompactOptionLabel(i)),datasets:[
+                    {type:'bar',label:'판매량',data:items.map(i=>i.qty),backgroundColor:items.map(i=>i.weight===100?'rgba(249,115,22,.78)':'rgba(56,189,248,.78)'),borderRadius:5,yAxisID:'y'},
+                    {type:'line',label:'매출액 (만원)',data:items.map(i=>Math.round(i.revenue/10000*10)/10),borderColor:'#2563EB',backgroundColor:'#2563EB',pointRadius:4,tension:.25,borderWidth:2.5,yAxisID:'y1'}
+                ]},plugins:[chartValueLabelPlugin],options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,title:{display:true,text:'판매량',font:{size:10}},ticks:{font:{size:10}}},y1:{beginAtZero:true,position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'매출액(만원)',font:{size:10}},ticks:{font:{size:10}}}},plugins:{legend:{position:'bottom',labels:{font:{size:10,weight:'700'},padding:10}},valueLabels:{display:true,showPct:false,fontSize:10}}}
+            });
+            const comboNote=document.getElementById('salesComboChartNote');
+            if(comboNote) comboNote.textContent=summary.items.length>20?`매출 상위 20개 / 전체 ${summary.items.length}개`:`전체 ${summary.items.length}개 옵션`;
+
+            destroySalesOptionChart('salesChartBundle');
+            const bundleEl=document.getElementById('salesChartBundle');
+            const bLabels=['1개입','2개입','3개입']; const bValues=bLabels.map(k=>summary.bundle[k].qty);
+            if(bundleEl) salesOptionChartInstances['salesChartBundle']=new Chart(bundleEl.getContext('2d'),{type:'bar',data:{labels:bLabels,datasets:[{label:'판매량',data:bValues,backgroundColor:'#A855F7',borderRadius:6}]},plugins:[chartValueLabelPlugin],options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false}},y:{beginAtZero:true,title:{display:true,text:'판매량',font:{size:10}}}},plugins:{legend:{display:false},valueLabels:{display:true,showPct:false,fontSize:10}}}});
+
+            destroySalesOptionChart('salesChartUnitEconomics');
+            const unitEl=document.getElementById('salesChartUnitEconomics');
+            const unitItems = summary.items.filter(i=>i.weight>0 && i.pack>0).slice(0,15).sort((a,b)=>{
+                const av=(a.revenue/Math.max(a.qty,1))/(a.weight*a.pack)*10; const bv=(b.revenue/Math.max(b.qty,1))/(b.weight*b.pack)*10; return bv-av;
+            });
+            if(unitEl) salesOptionChartInstances['salesChartUnitEconomics']=new Chart(unitEl.getContext('2d'),{type:'bar',data:{labels:unitItems.map(i=>salesCompactOptionLabel(i)),datasets:[{label:'10g당 실질 소비자 부담 가격 (원)',data:unitItems.map(i=>Math.round((i.revenue/Math.max(i.qty,1))/(i.weight*i.pack)*10)),backgroundColor:unitItems.map(i=>i.weight===100?'#10B981':'#38BDF8'),borderRadius:6}]},plugins:[chartValueLabelPlugin],options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{beginAtZero:true,title:{display:true,text:'10g당 가격 (원)',font:{size:10}},grid:{color:'#F1F5F9'},ticks:{font:{size:10}}},y:{grid:{display:false},ticks:{font:{size:10}}}},plugins:{legend:{display:false},valueLabels:{display:true,showPct:false,fontSize:10}}}});
+        }
+
+        function renderSalesOptionSummary(summary) {
+            const fmt=n=>Math.round(n||0).toLocaleString('ko-KR');
+            document.getElementById('salesKpiQty').textContent=fmt(summary.totalQty);
+            document.getElementById('salesKpiRevenue').textContent='₩'+fmt(summary.totalRevenue);
+            document.getElementById('salesKpiAov').textContent='₩'+fmt(summary.totalQty>0?summary.totalRevenue/summary.totalQty:0);
+            const topQtyLabel=summary.topQty?`${summary.topQty.weight?summary.topQty.weight+'g':'규격없음'} ${summary.topQty.pack||1}개입`:'-';
+            const topRevLabel=summary.topRev?`${summary.topRev.weight?summary.topRev.weight+'g':'규격없음'} ${summary.topRev.pack||1}개입`:'-';
+            const tq=document.getElementById('salesKpiTopQty'); tq.textContent=topQtyLabel; tq.title=summary.topQty?summary.topQty.optionName:'-';
+            document.getElementById('salesKpiTopQtySub').textContent=summary.topQty?`${fmt(summary.topQty.qty)}개 (${summary.totalQty?((summary.topQty.qty/summary.totalQty)*100).toFixed(1):'0.0'}%)`:'0개';
+            const tr=document.getElementById('salesKpiTopRev'); tr.textContent=topRevLabel; tr.title=summary.topRev?summary.topRev.optionName:'-';
+            document.getElementById('salesKpiTopRevSub').textContent=summary.topRev?`₩${fmt(summary.topRev.revenue)} (${summary.totalRevenue?((summary.topRev.revenue/summary.totalRevenue)*100).toFixed(1):'0.0'}%)`:'₩0';
+
+            const w30=summary.weight['30g'], w100=summary.weight['100g'];
+            const bundleQty=(summary.bundle['2개입'].qty+summary.bundle['3개입'].qty);
+            const p30=summary.totalQty?((w30.qty/summary.totalQty)*100):0, p100=summary.totalQty?((w100.qty/summary.totalQty)*100):0;
+            const r30=summary.totalRevenue?((w30.rev/summary.totalRevenue)*100):0, r100=summary.totalRevenue?((w100.rev/summary.totalRevenue)*100):0;
+            const bundleRate=summary.totalQty?((bundleQty/summary.totalQty)*100):0;
+            document.getElementById('salesInsight1').innerHTML=`<span class="font-bold text-sky-700">1. 용량별 판매:</span> 30g 제품군은 <strong>${fmt(w30.qty)}개 (${p30.toFixed(1)}%)</strong>, 매출 <strong>₩${fmt(w30.rev)} (${r30.toFixed(1)}%)</strong>입니다. 100g 제품군은 <strong>${fmt(w100.qty)}개 (${p100.toFixed(1)}%)</strong>, 매출 <strong>₩${fmt(w100.rev)} (${r100.toFixed(1)}%)</strong>입니다.`;
+            document.getElementById('salesInsight2').innerHTML=`<span class="font-bold text-orange-700">2. 매출 드라이버:</span> 최다 매출 옵션은 <strong>${salesEscape(topRevLabel)}</strong>이며, ${summary.topRev?`₩${fmt(summary.topRev.revenue)}로 전체 매출의 ${((summary.topRev.revenue/Math.max(summary.totalRevenue,1))*100).toFixed(1)}%`: '매출 데이터가 없습니다'}를 차지합니다.`;
+            document.getElementById('salesInsight3').innerHTML=`<span class="font-bold text-purple-700">3. 번들링 구조:</span> 2개입·3개입 판매량은 <strong>${fmt(bundleQty)}개 (${bundleRate.toFixed(1)}%)</strong>이며, 1개입 판매량은 <strong>${fmt(summary.bundle['1개입'].qty)}개</strong>입니다.`;
+
+            document.getElementById('salesWeightSummary').innerHTML=['30g','100g'].map(k=>`<div class="flex items-center justify-between px-2 py-2 rounded-lg bg-slate-50 border border-slate-200"><span class="font-semibold text-slate-600">${k} 군</span><span class="font-bold text-slate-800">${fmt(summary.weight[k].qty)}개 · ₩${fmt(summary.weight[k].rev)}</span></div>`).join('');
+            document.getElementById('salesBundleSummary').innerHTML=['1개입','2개입','3개입'].map(k=>`<div class="p-2 rounded-lg ${k==='1개입'?'bg-purple-50':'bg-slate-50'} text-center"><div class="text-[10px] ${k==='1개입'?'text-purple-700':'text-slate-600'} font-medium">${k}</div><div class="text-sm font-bold text-slate-900 mt-0.5">${fmt(summary.bundle[k].qty)}개</div><div class="text-[10px] text-slate-500">₩${fmt(summary.bundle[k].rev)}</div></div>`).join('');
+        }
+
+        function renderSalesOptionTable() {
+            const summary=salesOptionSummary();
+            let items=summary.items;
+            if(salesOptionFilter==='30g') items=items.filter(i=>i.weight===30);
+            else if(salesOptionFilter==='100g') items=items.filter(i=>i.weight===100);
+            else if(salesOptionFilter==='bundle') items=items.filter(i=>i.pack>1);
+            const tbody=document.getElementById('salesOptionTableBody'); if(!tbody) return;
+            tbody.innerHTML=items.map(i=>{
+                const avgPrice=i.qty>0?i.revenue/i.qty:0;
+                const per10g=(i.weight>0&&i.pack>0)?avgPrice/(i.weight*i.pack)*10:0;
+                const qShare=summary.totalQty>0?i.qty/summary.totalQty*100:0;
+                const rShare=summary.totalRevenue>0?i.revenue/summary.totalRevenue*100:0;
+                return `<tr class="hover:bg-slate-50"><td class="py-3 px-3 font-semibold text-slate-800" title="${salesEscape(i.optionName)}">${salesEscape(salesCompactOptionLabel(i))}</td><td class="py-3 px-3 text-slate-500 font-mono text-[10px]"><div>P: ${salesEscape(i.productId)}</div><div class="text-slate-400">O: ${salesEscape(i.optionId)}</div></td><td class="py-3 px-3 text-right text-slate-700">${salesParseNumber(i.orders).toLocaleString('ko-KR')}건</td><td class="py-3 px-3 text-right font-bold text-slate-900">${salesParseNumber(i.qty).toLocaleString('ko-KR')}개</td><td class="py-3 px-3 text-right text-slate-600">${qShare.toFixed(2)}%</td><td class="py-3 px-3 text-right text-slate-700">₩${Math.round(avgPrice).toLocaleString('ko-KR')}</td><td class="py-3 px-3 text-right font-bold text-orange-600">₩${Math.round(i.revenue).toLocaleString('ko-KR')}</td><td class="py-3 px-3 text-right text-slate-600">${rShare.toFixed(2)}%</td><td class="py-3 px-3 text-right text-slate-600">${per10g?Math.round(per10g)+'원':'-'}</td></tr>`;
+            }).join('');
+            document.getElementById('salesTableTotalQty').textContent=summary.totalQty.toLocaleString('ko-KR');
+            document.getElementById('salesTableTotalRev').textContent='₩'+Math.round(summary.totalRevenue).toLocaleString('ko-KR');
+            const validPer10=summary.items.filter(i=>i.weight>0&&i.pack>0).map(i=>(i.revenue/Math.max(i.qty,1))/(i.weight*i.pack)*10);
+            document.getElementById('salesTableAvg10g').textContent=validPer10.length?`평균 ${Math.round(validPer10.reduce((a,b)=>a+b,0)/validPer10.length)}원`:'-';
+        }
+
+        function renderSalesOptionRawTable() {
+            const head=document.getElementById('salesRawTableHead'); const body=document.getElementById('salesRawTableBody');
+            if(!head||!body) return;
+            const headers = salesOptionRawRows.length ? Object.keys(salesOptionRawRows[0]) : [];
+            head.innerHTML=headers.length?`<tr>${headers.map(h=>`<th class="py-2.5 px-3">${salesEscape(h)}</th>`).join('')}</tr>`:'';
+            body.innerHTML=salesOptionRawRows.map(row=>`<tr class="hover:bg-slate-50">${headers.map(h=>{ const v=row[h]; const num=['매출(원)','주문','판매량','방문자','조회','장바구니','아이템위너 비율(%)','총 매출(원)','총 판매수','총 취소 금액(원)','총 취소된 상품수','즉시 취소된 상품수'].includes(h); const pct=/전환율|비율/.test(h); const display=num&&!pct?salesParseNumber(v).toLocaleString('ko-KR'):pct?(typeof v==='number'?v.toFixed(2)+'%':salesEscape(v)) : salesEscape(v); return `<td class="py-2.5 px-3 ${num?'text-right':''}">${display}</td>`;}).join('')}</tr>`).join('');
+            document.getElementById('salesRawRowCount').textContent=`${salesOptionRawRows.length.toLocaleString('ko-KR')}행`;
+        }
+
+        function renderTab8() {
+            const summary=salesOptionSummary();
+            renderSalesOptionSummary(summary);
+            renderSalesOptionCharts(summary);
+            renderSalesOptionTable();
+            renderSalesOptionRawTable();
+        }
+
+        function filterSalesOptionTable(type) {
+            salesOptionFilter=type;
+            document.querySelectorAll('.sales-option-filter-btn').forEach(btn=>{
+                btn.classList.remove('active','bg-white','shadow-sm','text-slate-800');
+                btn.classList.add('text-slate-600');
+            });
+            const active=document.querySelector(`.sales-option-filter-btn[data-filter="${type}"]`);
+            if(active){active.classList.add('active','bg-white','shadow-sm','text-slate-800'); active.classList.remove('text-slate-600');}
+            renderSalesOptionTable();
+        }
+
+        function normalizeSalesOptionHeaders(rows) {
+            return rows.map(row=>{
+                const out={};
+                Object.entries(row).forEach(([key,value])=>{
+                    const k=String(key).replace(/^\uFEFF/,'').trim();
+                    out[k]=value;
+                });
+                if (out['옵션 ID']===undefined && out['옵션ID']!==undefined) out['옵션 ID']=out['옵션ID'];
+                if (out['등록상품ID']===undefined && out['등록 상품 ID']!==undefined) out['등록상품ID']=out['등록 상품 ID'];
+                return out;
+            });
+        }
+
+        function validateSalesOptionRawData(rows) {
+            const required=['옵션 ID','옵션명','상품명','등록상품ID','매출(원)','주문','판매량'];
+            return required.filter(k=>!rows.length || !Object.prototype.hasOwnProperty.call(rows[0],k));
+        }
+
+        function applySalesOptionFile(file) {
+            if(!file) return;
+            const status=document.getElementById('salesOptionFileStatus');
+            const reader=new FileReader();
+            reader.onload=(e)=>{
+                try{
+                    const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+                    const first=wb.SheetNames[0]; const ws=wb.Sheets[first];
+                    const rows=normalizeSalesOptionHeaders(XLSX.utils.sheet_to_json(ws,{defval:''}));
+                    if(!rows.length) throw new Error('데이터 행이 없습니다.');
+                    const missing=validateSalesOptionRawData(rows);
+                    if(missing.length) throw new Error(`필수 컬럼이 없습니다: ${missing.join(', ')}`);
+                    salesOptionRawRows=rows;
+                    salesOptionFilter='all';
+                    const sizeLabel=`${file.name} · ${rows.length.toLocaleString('ko-KR')}행`;
+                    if(status){status.textContent=`${sizeLabel} 로드 완료. 차트와 표를 재계산했습니다.`; status.className='text-[11px] font-semibold text-emerald-600 mt-3';}
+                    renderTab8();
+                    showToast('판매 옵션 Raw Data 로드 완료',`${file.name}의 ${rows.length.toLocaleString('ko-KR')}개 행을 기준으로 차트를 갱신했습니다.`,'📊');
+                }catch(err){
+                    if(status){status.textContent=`로드 실패: ${err.message}`; status.className='text-[11px] font-semibold text-rose-600 mt-3';}
+                    showToast('Raw Data 오류',err.message,'⚠️');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function handleSalesOptionFileSelect(event){
+            applySalesOptionFile(event.target.files?.[0]);
+            event.target.value='';
+        }
+
+        function resetSalesOptionData(){
+            salesOptionRawRows=SALES_OPTION_SAMPLE_DATA.map(r=>({...r}));
+            salesOptionFilter='all';
+            const status=document.getElementById('salesOptionFileStatus');
+            if(status){status.textContent='첨부 리포트 기준 샘플 데이터 7개 옵션을 복원했습니다.'; status.className='text-[11px] font-semibold text-blue-600 mt-3';}
+            renderTab8();
+        }
+
+        function setupSalesOptionDropzone(){
+            const dz=document.getElementById('salesOptionDropzone');
+            if(!dz || dz.dataset.bound==='1') return;
+            dz.dataset.bound='1';
+            ['dragenter','dragover','dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();},false));
+            dz.addEventListener('dragover',()=>dz.classList.add('dragover'));
+            dz.addEventListener('dragleave',()=>dz.classList.remove('dragover'));
+            dz.addEventListener('drop',e=>{
+                dz.classList.remove('dragover');
+                const file=e.dataTransfer?.files?.[0];
+                if(file) applySalesOptionFile(file);
+            });
+            dz.addEventListener('click',()=>document.getElementById('salesOptionFileInput')?.click());
+        }
+
         function renderTab7(){renderKeywordManagement();}
 
         function renderTab6() {
@@ -3324,6 +4736,24 @@
             });
 
             const ws = XLSX.utils.json_to_sheet(exportRows);
+
+            // Apply Excel number formats so exported cells remain numeric while displaying
+            // thousands separators and two decimals for percentage metrics.
+            const formatByColumn = {};
+            visibleCols.forEach((key, idx) => {
+                const col = defMap[key];
+                formatByColumn[idx] = (col.type === 'percent' || /%/.test(String(col.label || ''))) ? '0.00\"%\"'
+                    : (col.type === 'number' || col.type === 'currency') ? '#,##0'
+                    : null;
+            });
+            for (let r = 2; r <= rows.length + 1; r++) {
+                Object.keys(formatByColumn).forEach(idx => {
+                    const fmt = formatByColumn[idx];
+                    const cell = ws[XLSX.utils.encode_cell({ r: r - 1, c: Number(idx) })];
+                    if (cell && fmt && typeof cell.v === 'number') cell.z = fmt;
+                });
+            }
+
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, '데이터 탐색기');
 
@@ -3341,7 +4771,9 @@
             const metaWs = XLSX.utils.aoa_to_sheet(meta);
             XLSX.utils.book_append_sheet(wb, metaWs, '다운로드 조건');
 
-            XLSX.writeFile(wb, 'Ad_Performance_Explorer_Filtered_Report.xlsx');
+            const now = new Date();
+            const dateStamp = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, '0'), String(now.getDate()).padStart(2, '0')].join('');
+            XLSX.writeFile(wb, `Ad_Performance_Explorer_Filtered_Report_${dateStamp}.xlsx`);
         }
 
         // CHART HELPERS
